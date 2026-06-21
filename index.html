@@ -1,14 +1,191 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/travel-itinerary/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>travel-itinerary</title>
-    <script type="module" crossorigin src="/travel-itinerary/assets/index-RPDJ4ofK.js"></script>
-    <link rel="stylesheet" crossorigin href="/travel-itinerary/assets/index-gmEbnmE7.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="預約您的完美旅程！這是一個精美的旅行規劃與行程安排網頁，支援編輯每日行程、管理景點以及記錄精彩的旅遊照片。">
+    <title>StellarVoyage | 您的專屬旅行規劃助理</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script type="module" crossorigin src="/travel-itinerary/assets/index-DskSR4Vs.js"></script>
+  <link rel="stylesheet" crossorigin href="/travel-itinerary/assets/index-Dmeg80M-.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <div class="logo">
+                    <i class="fa-solid fa-compass-drafting logo-icon"></i>
+                    <span>StellarVoyage</span>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="section-header">
+                    <h3>我的旅程</h3>
+                    <button id="btn-new-trip" class="btn-icon" title="新增旅程">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <ul class="trip-list" id="trip-list"></ul>
+            </div>
+            <div class="sidebar-section" id="day-selector-section">
+                <div class="section-header">
+                    <h3>日程規劃</h3>
+                    <button id="btn-add-day" class="btn-icon" title="新增天數">
+                        <i class="fa-solid fa-calendar-plus"></i>
+                    </button>
+                </div>
+                <div class="day-chips-container" id="day-chips-container"></div>
+            </div>
+            <footer class="sidebar-footer">
+                <p>&copy; 2026 StellarVoyage</p>
+                <p>探索、規劃、珍藏記憶</p>
+            </footer>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-nav">
+                <div class="trip-title-area">
+                    <h1 id="active-trip-name">尚未選擇旅程</h1>
+                    <span id="active-trip-dates" class="trip-dates">請先建立或選擇一個旅程</span>
+                </div>
+                <div class="header-actions">
+                    <button id="btn-delete-trip" class="btn btn-danger" style="display: none;">
+                        <i class="fa-solid fa-trash"></i> 刪除此旅程
+                    </button>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                <section class="panel timeline-panel" aria-labelledby="timeline-heading">
+                    <div class="panel-header">
+                        <h2 id="timeline-heading"><i class="fa-solid fa-route icon-accent"></i> 行程規劃表</h2>
+                        <button id="btn-add-activity" class="btn btn-primary" disabled>
+                            <i class="fa-solid fa-plus-circle"></i> 新增行程
+                        </button>
+                    </div>
+                    <div class="category-filters" id="category-filters">
+                        <button class="filter-chip active" data-category="all">全部</button>
+                        <button class="filter-chip" data-category="flight"><i class="fa-solid fa-plane"></i> 交通</button>
+                        <button class="filter-chip" data-category="hotel"><i class="fa-solid fa-hotel"></i> 住宿</button>
+                        <button class="filter-chip" data-category="sightseeing"><i class="fa-solid fa-camera-retro"></i> 景點</button>
+                        <button class="filter-chip" data-category="food"><i class="fa-solid fa-utensils"></i> 餐飲</button>
+                        <button class="filter-chip" data-category="other"><i class="fa-solid fa-ellipsis"></i> 其他</button>
+                    </div>
+                    <div class="timeline-container" id="timeline-container">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <p>選擇旅程並新增日程，即可開始排定您的完美行程！</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel gallery-panel" aria-labelledby="gallery-heading">
+                    <div class="panel-header">
+                        <h2 id="gallery-heading"><i class="fa-solid fa-images icon-accent"></i> 旅遊相簿記錄</h2>
+                        <div class="upload-btn-wrapper">
+                            <button class="btn btn-secondary" id="btn-trigger-upload" disabled>
+                                <i class="fa-solid fa-cloud-arrow-up"></i> 上傳照片
+                            </button>
+                            <input type="file" id="photo-upload-input" accept="image/*" multiple style="display: none;" />
+                        </div>
+                    </div>
+                    <div class="gallery-info-bar">
+                        <span>在這裡留下精彩瞬間，可連結至特定日程</span>
+                    </div>
+                    <div id="dropzone" class="dropzone disabled">
+                        <i class="fa-solid fa-images dropzone-icon"></i>
+                        <p>拖放照片至此，或點擊上方按鈕上傳</p>
+                    </div>
+                    <div class="photo-grid" id="photo-grid"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: Create Trip -->
+    <div class="modal" id="modal-trip">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-earth-asia"></i> 建立新旅程</h2>
+                <span class="close-btn" id="close-modal-trip">&times;</span>
+            </div>
+            <form id="form-new-trip">
+                <div class="form-group">
+                    <label for="trip-name">旅程名稱 <span class="required">*</span></label>
+                    <input type="text" id="trip-name" required placeholder="例如：京都楓葉五日遊、巴黎塞納河畔">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="trip-start">出發日期</label>
+                        <input type="date" id="trip-start">
+                    </div>
+                    <div class="form-group">
+                        <label for="trip-end">回程日期</label>
+                        <input type="date" id="trip-end">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link" id="btn-cancel-trip">取消</button>
+                    <button type="submit" class="btn btn-primary">建立</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Add Activity -->
+    <div class="modal" id="modal-activity">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-circle-plus"></i> 新增行程項目</h2>
+                <span class="close-btn" id="close-modal-activity">&times;</span>
+            </div>
+            <form id="form-new-activity">
+                <div class="form-group">
+                    <label for="activity-title">行程名稱 / 景點 <span class="required">*</span></label>
+                    <input type="text" id="activity-title" required placeholder="例如：金閣寺參拜、新幹線前往東京">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="activity-time">時間 <span class="required">*</span></label>
+                        <input type="time" id="activity-time" required value="09:00">
+                    </div>
+                    <div class="form-group">
+                        <label for="activity-category">類型</label>
+                        <select id="activity-category">
+                            <option value="sightseeing">景點</option>
+                            <option value="flight">交通</option>
+                            <option value="hotel">住宿</option>
+                            <option value="food">餐飲</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="activity-location">地點 / 地址</label>
+                    <input type="text" id="activity-location" placeholder="例如：京都市北區金閣寺町1">
+                </div>
+                <div class="form-group">
+                    <label for="activity-desc">詳細說明 / 備忘錄</label>
+                    <textarea id="activity-desc" rows="3" placeholder="門票 400 日圓，下午 5:00 關門..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link" id="btn-cancel-activity">取消</button>
+                    <button type="submit" class="btn btn-primary">加入行程</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Lightbox -->
+    <div class="modal lightbox-modal" id="modal-lightbox">
+        <span class="close-btn" id="close-lightbox">&times;</span>
+        <div class="lightbox-content">
+            <img id="lightbox-img" src="" alt="Full Screen Photo">
+            <div class="lightbox-caption" id="lightbox-caption"></div>
+        </div>
+    </div>
+</body>
 </html>
