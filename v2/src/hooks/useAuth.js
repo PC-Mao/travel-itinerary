@@ -7,15 +7,29 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Handle redirect result after returning from Google login
-    getRedirectResult(auth).catch(err => {
-      console.error('Redirect result error', err)
-    })
+    // Keep loading=true until BOTH checks resolve:
+    // 1. getRedirectResult — processes the token after returning from Google
+    // 2. onAuthStateChanged — reads the persisted auth state
+    let redirectDone = false
+    let authStateDone = false
+
+    function tryFinish() {
+      if (redirectDone && authStateDone) setLoading(false)
+    }
+
+    getRedirectResult(auth)
+      .then(result => {
+        if (result?.user) setUser(result.user)
+      })
+      .catch(err => console.error('getRedirectResult error:', err.code, err.message))
+      .finally(() => { redirectDone = true; tryFinish() })
 
     const unsubscribe = onAuthStateChanged(auth, u => {
       setUser(u)
-      setLoading(false)
+      authStateDone = true
+      tryFinish()
     })
+
     return unsubscribe
   }, [])
 
