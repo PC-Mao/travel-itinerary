@@ -60,6 +60,20 @@ export function useTrips(uid) {
     setActiveTripId(remaining[0]?.id ?? null)
   }
 
+  async function toggleShare(tripId) {
+    if (!uid) return
+    const trip = trips.find(t => t.id === tripId)
+    if (!trip) return
+    await updateDoc(doc(db, 'users', uid, 'trips', tripId), {
+      isShared: !trip.isShared,
+    })
+  }
+
+  function getShareUrl(tripId) {
+    const token = encodeURIComponent(btoa(`${uid}:${tripId}`))
+    return `${window.location.origin}/travel-itinerary/v2/?share=${token}`
+  }
+
   async function addDay() {
     if (!uid || !activeTrip) return
     const newEnd = new Date(activeTrip.endDate)
@@ -99,6 +113,8 @@ export function useTrips(uid) {
     addDay,
     addActivity,
     deleteActivity,
+    toggleShare,
+    getShareUrl,
   }
 }
 
