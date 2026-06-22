@@ -22,9 +22,12 @@ export default function App() {
     toggleShare, getShareUrl,
   } = useTrips(user?.uid)
 
-  const { trip: sharedTrip, loading: sharedLoading, error: sharedError } = useSharedTrip(
-    shareParam && !user ? shareParam : null  // only load shared trip for non-owners
-  )
+  const {
+    trip: sharedTrip, loading: sharedLoading, error: sharedError,
+    activeDayIndex: sharedDayIndex, setActiveDayIndex: setSharedDayIndex,
+    activeCategoryFilter: sharedFilter, setFilter: setSharedFilter,
+    addActivity: sharedAddActivity, deleteActivity: sharedDeleteActivity, addDay: sharedAddDay,
+  } = useSharedTrip(shareParam || null)
 
   const [showTripModal, setShowTripModal] = useState(false)
   const [showActivityModal, setShowActivityModal] = useState(false)
@@ -88,8 +91,8 @@ export default function App() {
     )
   }
 
-  // --- Shared trip view (not logged in, has ?share= param) ---
-  if (!user && shareParam) {
+  // --- Shared trip view (has ?share= param) ---
+  if (shareParam) {
     if (sharedLoading) {
       return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: '16px' }}>
@@ -107,7 +110,22 @@ export default function App() {
         </div>
       )
     }
-    if (sharedTrip) return <SharedTripView trip={sharedTrip} onSignIn={signIn} />
+    if (sharedTrip) {
+      return (
+        <SharedTripView
+          trip={sharedTrip}
+          activeDayIndex={sharedDayIndex}
+          setActiveDayIndex={setSharedDayIndex}
+          activeCategoryFilter={sharedFilter}
+          setFilter={setSharedFilter}
+          addActivity={sharedAddActivity}
+          deleteActivity={sharedDeleteActivity}
+          addDay={sharedAddDay}
+          user={user}
+          onSignIn={signIn}
+        />
+      )
+    }
   }
 
   // --- Login screen ---
