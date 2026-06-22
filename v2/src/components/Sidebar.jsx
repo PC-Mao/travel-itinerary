@@ -1,4 +1,4 @@
-export default function Sidebar({ trips, activeTrip, activeDayIndex, onSelectTrip, onNewTrip, onSelectDay, onAddDay }) {
+export default function Sidebar({ trips, activeTrip, activeDayIndex, onSelectTrip, onNewTrip, onSelectDay, onAddDay, user, onLogOut }) {
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -17,6 +17,11 @@ export default function Sidebar({ trips, activeTrip, activeDayIndex, onSelectTri
           </button>
         </div>
         <ul className="trip-list">
+          {trips.length === 0 && (
+            <li style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '8px 4px' }}>
+              尚無旅程，點擊「+」新增
+            </li>
+          )}
           {trips.map(trip => (
             <li key={trip.id}
               className={`trip-item ${trip.id === activeTrip?.id ? 'active' : ''}`}
@@ -54,7 +59,21 @@ export default function Sidebar({ trips, activeTrip, activeDayIndex, onSelectTri
         </div>
       )}
 
+      {/* User Info */}
       <footer className="sidebar-footer">
+        {user && (
+          <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img src={user.photoURL} alt="avatar" referrerPolicy="no-referrer"
+              style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid var(--border-color)' }} />
+            <span style={{ fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user.displayName}
+            </span>
+            <button onClick={onLogOut} title="登出"
+              style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem' }}>
+              <i className="fa-solid fa-right-from-bracket" />
+            </button>
+          </div>
+        )}
         <p>&copy; 2026 StellarVoyage</p>
         <p>探索、規劃、珍藏記憶</p>
       </footer>
