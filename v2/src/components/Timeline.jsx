@@ -8,7 +8,7 @@ const FILTERS = [
   { key: 'other', label: '其他', icon: 'fa-ellipsis' },
 ]
 
-export default function Timeline({ activeTrip, activeDayIndex, activeFilter, onFilter, onAddActivity, onDeleteActivity }) {
+export default function Timeline({ activeTrip, activeDayIndex, activeFilter, onFilter, onAddActivity, onDeleteActivity, selectedActivityId, onSelectActivity }) {
   const hasTrip = !!activeTrip
 
   let activities = hasTrip
@@ -29,7 +29,6 @@ export default function Timeline({ activeTrip, activeDayIndex, activeFilter, onF
         </button>
       </div>
 
-      {/* Category filters */}
       <div className="category-filters">
         {FILTERS.map(f => (
           <button key={f.key}
@@ -53,7 +52,11 @@ export default function Timeline({ activeTrip, activeDayIndex, activeFilter, onF
             <p>今天沒有排定此類型的行程項目。點擊右上角「新增行程」規劃日程吧！</p>
           </div>
         ) : activities.map(act => (
-          <article key={act.id} className="timeline-item">
+          <article
+            key={act.id}
+            className={`timeline-item ${act.id === selectedActivityId ? 'active' : ''}`}
+            onClick={() => onSelectActivity(act.id === selectedActivityId ? null : act)}
+          >
             <div className="timeline-bullet" />
             <span className="timeline-time-badge">{act.time}</span>
             <div className="timeline-title-row">
@@ -71,7 +74,8 @@ export default function Timeline({ activeTrip, activeDayIndex, activeFilter, onF
             {act.desc && <p className="timeline-desc">{act.desc}</p>}
             <div className="timeline-actions">
               <button className="btn-icon" title="刪除行程"
-                onClick={() => {
+                onClick={e => {
+                  e.stopPropagation()
                   if (confirm(`確定要刪除行程「${act.title}」嗎？`)) onDeleteActivity(act.id)
                 }}
               >

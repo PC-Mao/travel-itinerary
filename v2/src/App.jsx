@@ -19,31 +19,44 @@ export default function App() {
   const [showTripModal, setShowTripModal] = useState(false)
   const [showActivityModal, setShowActivityModal] = useState(false)
   const [lightboxPhoto, setLightboxPhoto] = useState(null)
-  // Photos stay in localStorage (no Firebase Storage)
+  // selectedActivity: the timeline item user clicked to open gallery
+  const [selectedActivity, setSelectedActivity] = useState(null)
+
+  // Photos keyed by activityId (localStorage, not Firestore)
   const [localPhotos, setLocalPhotos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('sv_photos') || '{}') } catch { return {} }
   })
 
-  function savePhotos(photos) {
-    setLocalPhotos(photos)
-    localStorage.setItem('sv_photos', JSON.stringify(photos))
-  }
-
-  function tripPhotoKey() { return `${user?.uid}_${activeTrip?.id}_${activeDayIndex}` }
+  function photoKey(actId) { return `${user?.uid}_${actId}` }
 
   function addPhoto(data) {
-    const key = tripPhotoKey()
-    const updated = { ...localPhotos, [key]: [...(localPhotos[key] || []), { id: 'p-' + Date.now(), data, dayIndex: activeDayIndex }] }
-    savePhotos(updated)
+    if (!selectedActivity) return
+    const key = photoKey(selectedActivity.id)
+    const updated = { ...localPhotos, [key]: [...(localPhotos[key] || []), { id: 'p-' + Date.now(), data }] }
+    setLocalPhotos(updated)
+    localStorage.setItem('sv_photos', JSON.stringify(updated))
   }
 
   function deletePhoto(photoId) {
-    const key = tripPhotoKey()
+    if (!selectedActivity) return
+    const key = photoKey(selectedActivity.id)
     const updated = { ...localPhotos, [key]: (localPhotos[key] || []).filter(p => p.id !== photoId) }
-    savePhotos(updated)
+    setLocalPhotos(updated)
+    localStorage.setItem('sv_photos', JSON.stringify(updated))
   }
 
-  const currentPhotos = activeTrip ? (localPhotos[tripPhotoKey()] || []) : []
+  const currentPhotos = selectedActivity ? (localPhotos[photoKey(selectedActivity.id)] || []) : []
+
+  // Clear selected activity when switching day or trip
+  function handleSetActiveTripId(id) {
+    setSelectedActivity(null)
+    setActiveTripId(id)
+  }
+
+  function handleSetActiveDayIndex(i) {
+    setSelectedActivity(null)
+    setActiveDayIndex(i)
+  }
 
   function formatDateRange(start, end) {
     if (!start) return '請先建立或選擇一個旅程'
@@ -51,7 +64,6 @@ export default function App() {
     return `${start} 至 ${end}`
   }
 
-  // Loading screen
   if (authLoading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: '16px' }}>
@@ -61,7 +73,6 @@ export default function App() {
     )
   }
 
-  // Login screen
   if (!user) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
@@ -90,9 +101,9 @@ export default function App() {
         trips={trips}
         activeTrip={activeTrip}
         activeDayIndex={activeDayIndex}
-        onSelectTrip={setActiveTripId}
+        onSelectTrip={handleSetActiveTripId}
         onNewTrip={() => setShowTripModal(true)}
-        onSelectDay={setActiveDayIndex}
+        onSelectDay={handleSetActiveDayIndex}
         onAddDay={addDay}
         user={user}
         onLogOut={logOut}
@@ -129,11 +140,13 @@ export default function App() {
             activeFilter={activeCategoryFilter}
             onFilter={setFilter}
             onAddActivity={() => setShowActivityModal(true)}
-            onDeleteActivity={deleteActivity}
+            onDeleteActivity={id => { if (selectedActivity?.id === id) setSelectedActivity(null); deleteActivity(id) }}
+            selectedActivityId={selectedActivity?.id}
+            onSelectActivity={setSelectedActivity}
           />
           <GalleryPanel
-            activeTrip={activeTrip ? { ...activeTrip, photos: currentPhotos } : null}
-            activeDayIndex={activeDayIndex}
+            selectedActivity={selectedActivity}
+            photos={currentPhotos}
             onAddPhoto={addPhoto}
             onDeletePhoto={deletePhoto}
             onOpenLightbox={setLightboxPhoto}
