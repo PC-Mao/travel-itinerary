@@ -8,7 +8,7 @@ const FILTERS = [
   { key: 'other', label: '其他', icon: 'fa-ellipsis' },
 ]
 
-export default function Timeline({ activeTrip, activeDayIndex, activeFilter, onFilter, onAddActivity, onEditActivity, onDeleteActivity, selectedActivityId, onSelectActivity, expenses }) {
+export default function Timeline({ className = '', activeTrip, activeDayIndex, activeFilter, onFilter, onAddActivity, onEditActivity, onDeleteActivity, selectedActivityId, onSelectActivity, expenses }) {
   const hasTrip = !!activeTrip
 
   // Only show activities for the selected day
@@ -19,7 +19,7 @@ export default function Timeline({ activeTrip, activeDayIndex, activeFilter, onF
   activities = [...activities].sort((a, b) => a.time.localeCompare(b.time))
 
   return (
-    <section className="panel timeline-panel">
+    <section className={`panel timeline-panel ${className}`}>
       <div className="panel-header">
         <h2><i className="fa-solid fa-route icon-accent" /> 行程規劃表</h2>
         <button className="btn btn-primary" disabled={!hasTrip} onClick={onAddActivity}>
