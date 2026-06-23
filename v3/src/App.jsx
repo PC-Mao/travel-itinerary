@@ -4,7 +4,7 @@ import { useTrips } from './hooks/useTrips'
 import { useSharedTrip } from './hooks/useSharedTrip'
 import Sidebar from './components/Sidebar'
 import Timeline from './components/Timeline'
-import GalleryPanel from './components/GalleryPanel'
+import DetailsPanel from './components/DetailsPanel'
 import SharedTripView from './components/SharedTripView'
 import TripModal from './components/modals/TripModal'
 import ActivityModal from './components/modals/ActivityModal'
@@ -57,6 +57,33 @@ export default function App() {
   }
 
   const currentPhotos = selectedActivity ? (localPhotos[photoKey(selectedActivity.id)] || []) : []
+
+  // Expenses (localStorage, keyed by activityId)
+  const [localExpenses, setLocalExpenses] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('sv_v3_expenses') || '{}') } catch { return {} }
+  })
+
+  function expenseKey(actId) { return `${user?.uid}_${actId}` }
+
+  function addExpense({ purpose, amount }) {
+    if (!selectedActivity) return
+    const key = expenseKey(selectedActivity.id)
+    const now = new Date()
+    const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+    const updated = { ...localExpenses, [key]: [...(localExpenses[key] || []), { id: 'ex-' + Date.now(), purpose, amount, time: timeStr }] }
+    setLocalExpenses(updated)
+    localStorage.setItem('sv_v3_expenses', JSON.stringify(updated))
+  }
+
+  function deleteExpense(expenseId) {
+    if (!selectedActivity) return
+    const key = expenseKey(selectedActivity.id)
+    const updated = { ...localExpenses, [key]: (localExpenses[key] || []).filter(e => e.id !== expenseId) }
+    setLocalExpenses(updated)
+    localStorage.setItem('sv_v3_expenses', JSON.stringify(updated))
+  }
+
+  const currentExpenses = selectedActivity ? (localExpenses[expenseKey(selectedActivity.id)] || []) : []
 
   function handleSetActiveTripId(id) { setSelectedActivity(null); setActiveTripId(id) }
   function handleSetActiveDayIndex(i) { setSelectedActivity(null); setActiveDayIndex(i) }
@@ -209,12 +236,15 @@ export default function App() {
             selectedActivityId={selectedActivity?.id}
             onSelectActivity={setSelectedActivity}
           />
-          <GalleryPanel
+          <DetailsPanel
             selectedActivity={selectedActivity}
             photos={currentPhotos}
             onAddPhoto={addPhoto}
             onDeletePhoto={deletePhoto}
             onOpenLightbox={setLightboxPhoto}
+            expenses={currentExpenses}
+            onAddExpense={addExpense}
+            onDeleteExpense={deleteExpense}
           />
         </div>
       </main>
