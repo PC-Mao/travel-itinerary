@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useTrips } from './hooks/useTrips'
 import { useSharedTrip } from './hooks/useSharedTrip'
@@ -44,6 +44,12 @@ export default function App() {
   // Mobile navigation state
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [mobileTab, setMobileTab] = useState('timeline') // 'timeline' | 'details'
+  const mainContentRef = useRef(null)
+
+  // Scroll to top of main-content whenever the mobile tab changes
+  useEffect(() => {
+    if (mainContentRef.current) mainContentRef.current.scrollTop = 0
+  }, [mobileTab])
 
   const [localPhotos, setLocalPhotos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('sv_v3_photos') || '{}') } catch { return {} }
@@ -211,7 +217,7 @@ export default function App() {
         onLogOut={logOut}
       />
 
-      <main className="main-content">
+      <main className="main-content" ref={mainContentRef}>
         {/* Mobile top header (hidden on desktop) */}
         <header className="mobile-header">
           <button className="btn-icon" onClick={() => setDrawerOpen(true)} title="開啟選單">
