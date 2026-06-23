@@ -297,6 +297,7 @@ export default function App() {
           <Timeline
             className={mobileTab !== 'timeline' ? 'panel-hidden-mobile' : ''}
             activeTrip={activeTrip}
+            activeDayIndex={activeDayIndex}
             activeFilter={activeCategoryFilter}
             onFilter={setFilter}
             onAddActivity={() => { setActToEdit(null); setShowActivityModal(true) }}
