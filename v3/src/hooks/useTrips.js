@@ -38,6 +38,7 @@ export function useTrips(uid) {
       endDate: endDate || offsetDate(startDate, 1),
       daysCount: calcDays(startDate, endDate),
       activities: [],
+      members: [],
       isShared: false,
       createdAt: serverTimestamp(),
     })
@@ -76,6 +77,25 @@ export function useTrips(uid) {
     })
   }
 
+  async function addMember(tripId, name) {
+    if (!uid) return
+    const trip = trips.find(t => t.id === tripId)
+    if (!trip) return
+    const newMember = { id: 'mem-' + Date.now(), name }
+    await updateDoc(doc(db, USERS_COL, uid, 'trips', tripId), {
+      members: [...(trip.members ?? []), newMember],
+    })
+  }
+
+  async function deleteMember(tripId, memberId) {
+    if (!uid) return
+    const trip = trips.find(t => t.id === tripId)
+    if (!trip) return
+    await updateDoc(doc(db, USERS_COL, uid, 'trips', tripId), {
+      members: (trip.members ?? []).filter(m => m.id !== memberId),
+    })
+  }
+
   async function toggleShare(tripId) {
     if (!uid) return
     const trip = trips.find(t => t.id === tripId)
@@ -93,6 +113,7 @@ export function useTrips(uid) {
     setActiveTripId, setActiveDayIndex,
     setFilter: setActiveCategoryFilter,
     addTrip, deleteTrip, addDay, addActivity, deleteActivity,
+    addMember, deleteMember,
     toggleShare, getShareUrl,
   }
 }

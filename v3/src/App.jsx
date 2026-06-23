@@ -4,10 +4,11 @@ import { useTrips } from './hooks/useTrips'
 import { useSharedTrip } from './hooks/useSharedTrip'
 import Sidebar from './components/Sidebar'
 import Timeline from './components/Timeline'
-import GalleryPanel from './components/GalleryPanel'
+import DetailsPanel from './components/DetailsPanel'
 import SharedTripView from './components/SharedTripView'
 import TripModal from './components/modals/TripModal'
 import ActivityModal from './components/modals/ActivityModal'
+import MembersModal from './components/modals/MembersModal'
 import Lightbox from './components/modals/Lightbox'
 
 const shareParam = new URLSearchParams(window.location.search).get('share')
@@ -18,6 +19,7 @@ export default function App() {
     trips, activeTrip, activeDayIndex, activeCategoryFilter, loading: tripsLoading,
     setActiveTripId, setActiveDayIndex, setFilter,
     addTrip, deleteTrip, addDay, addActivity, deleteActivity,
+    addMember, deleteMember,
     toggleShare, getShareUrl,
   } = useTrips(user?.uid)
 
@@ -30,6 +32,7 @@ export default function App() {
 
   const [showTripModal, setShowTripModal] = useState(false)
   const [showActivityModal, setShowActivityModal] = useState(false)
+  const [showMembersModal, setShowMembersModal] = useState(false)
   const [lightboxPhoto, setLightboxPhoto] = useState(null)
   const [selectedActivity, setSelectedActivity] = useState(null)
   const [shareCopied, setShareCopied] = useState(false)
@@ -57,6 +60,29 @@ export default function App() {
   }
 
   const currentPhotos = selectedActivity ? (localPhotos[photoKey(selectedActivity.id)] || []) : []
+
+  // Expenses (localStorage, keyed by uid_activityId)
+  const [localExpenses, setLocalExpenses] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('sv_v3_expenses') || '{}') } catch { return {} }
+  })
+  function expKey(actId) { return `${user?.uid}_${actId}` }
+  function addExpense({ purpose, amount }) {
+    if (!selectedActivity) return
+    const key = expKey(selectedActivity.id)
+    const now = new Date()
+    const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    const updated = { ...localExpenses, [key]: [...(localExpenses[key] || []), { id: 'ex-' + Date.now(), purpose, amount, time: timeStr }] }
+    setLocalExpenses(updated)
+    localStorage.setItem('sv_v3_expenses', JSON.stringify(updated))
+  }
+  function deleteExpense(expId) {
+    if (!selectedActivity) return
+    const key = expKey(selectedActivity.id)
+    const updated = { ...localExpenses, [key]: (localExpenses[key] || []).filter(e => e.id !== expId) }
+    setLocalExpenses(updated)
+    localStorage.setItem('sv_v3_expenses', JSON.stringify(updated))
+  }
+  const currentExpenses = selectedActivity ? (localExpenses[expKey(selectedActivity.id)] || []) : []
 
   function handleSetActiveTripId(id) { setSelectedActivity(null); setActiveTripId(id) }
   function handleSetActiveDayIndex(i) { setSelectedActivity(null); setActiveDayIndex(i) }
@@ -174,6 +200,10 @@ export default function App() {
           </div>
           {activeTrip && (
             <div className="header-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button id="btn-manage-members" className="btn btn-secondary"
+                onClick={() => setShowMembersModal(true)}>
+                <i className="fa-solid fa-users-gear" /> 成員管理
+              </button>
               <button
                 className="btn btn-secondary"
                 style={activeTrip.isShared ? { borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' } : {}}
@@ -209,12 +239,15 @@ export default function App() {
             selectedActivityId={selectedActivity?.id}
             onSelectActivity={setSelectedActivity}
           />
-          <GalleryPanel
+          <DetailsPanel
             selectedActivity={selectedActivity}
             photos={currentPhotos}
             onAddPhoto={addPhoto}
             onDeletePhoto={deletePhoto}
             onOpenLightbox={setLightboxPhoto}
+            expenses={currentExpenses}
+            onAddExpense={addExpense}
+            onDeleteExpense={deleteExpense}
           />
         </div>
       </main>
@@ -224,6 +257,14 @@ export default function App() {
       )}
       {showActivityModal && (
         <ActivityModal onClose={() => setShowActivityModal(false)} onSubmit={act => { addActivity(act); setShowActivityModal(false) }} />
+      )}
+      {showMembersModal && activeTrip && (
+        <MembersModal
+          members={activeTrip.members || []}
+          onAddMember={name => addMember(activeTrip.id, name)}
+          onDeleteMember={id => deleteMember(activeTrip.id, id)}
+          onClose={() => setShowMembersModal(false)}
+        />
       )}
       <Lightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
     </div>

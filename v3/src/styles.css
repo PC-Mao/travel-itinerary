@@ -860,6 +860,13 @@ textarea:focus {
     background: hsla(180, 100%, 48%, 0.02);
 }
 
+/* Invert calendar & clock picker icons in dark mode to make them white */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
 textarea {
     resize: none;
 }
@@ -1176,6 +1183,96 @@ select option {
     margin-bottom: 8px;
     margin-left: 0;
 }
+
+/* Daily Memo Card Styling */
+.timeline-day-memo-card {
+    background: var(--bg-card);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    transition: var(--transition-fast);
+    width: 100%;
+}
+
+.timeline-day-memo-card:hover {
+    border-color: var(--border-hover);
+    background: hsla(223, 47%, 20%, 0.2);
+}
+
+.day-memo-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.day-memo-display.empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.day-memo-icon {
+    color: var(--accent-cyan);
+    font-size: 1rem;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+.day-memo-text {
+    flex: 1;
+    line-height: 1.5;
+    white-space: pre-line;
+    word-break: break-all;
+}
+
+.day-memo-edit-btn {
+    opacity: 0;
+    transition: var(--transition-fast);
+}
+
+.timeline-day-memo-card:hover .day-memo-edit-btn {
+    opacity: 0.8;
+}
+
+.day-memo-edit-btn:hover {
+    color: var(--accent-cyan) !important;
+    opacity: 1 !important;
+}
+
+.day-memo-edit-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.day-memo-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(3, 7, 18, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.day-memo-textarea:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    box-shadow: var(--shadow-glow);
+}
+
+.day-memo-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
 
 
 
