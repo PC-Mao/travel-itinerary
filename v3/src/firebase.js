@@ -16,5 +16,5 @@ export const auth = getAuth(app)
 export const provider = new GoogleAuthProvider()
 export const db = getFirestore(app)
 
-// v3 uses a separate Firestore collection to isolate data from v2
-export const USERS_COL = 'v3_users'
+// v3.1 uses a separate Firestore collection to isolate data from v3
+export const USERS_COL = 'v3.1_users'
