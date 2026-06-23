@@ -8,7 +8,7 @@ import { db, USERS_COL } from '../firebase'
 export function useTrips(uid) {
   const [trips, setTrips] = useState([])
   const [activeTripId, setActiveTripIdState] = useState(null)
-  const [activeDayIndex, setActiveDayIndex] = useState(0)
+  const [activeDayIndex, setActiveDayIndex] = useState(null)
   const [activeCategoryFilter, setActiveCategoryFilter] = useState('all')
   const [loading, setLoading] = useState(true)
 
@@ -27,7 +27,7 @@ export function useTrips(uid) {
 
   const activeTrip = trips.find(t => t.id === activeTripId) ?? null
 
-  function setActiveTripId(id) { setActiveTripIdState(id); setActiveDayIndex(0) }
+  function setActiveTripId(id) { setActiveTripIdState(id); setActiveDayIndex(null) }
 
   async function addTrip({ name, startDate, endDate }) {
     if (!uid) return
@@ -87,11 +87,11 @@ export function useTrips(uid) {
       activities: newActivities,
       dayMemos: newMemos,
     })
-    if (activeDayIndex >= trip.daysCount - 1) setActiveDayIndex(Math.max(0, trip.daysCount - 2))
+    if (activeDayIndex !== null && activeDayIndex >= trip.daysCount - 1) setActiveDayIndex(Math.max(0, trip.daysCount - 2))
   }
 
   async function addActivity(act) {
-    if (!uid || !activeTrip) return
+    if (!uid || !activeTrip || activeDayIndex === null) return
     const newAct = { id: 'act-' + Date.now(), dayIndex: activeDayIndex, ...act }
     await updateDoc(doc(db, USERS_COL, uid, 'trips', activeTrip.id), {
       activities: [...(activeTrip.activities ?? []), newAct],
@@ -149,7 +149,8 @@ export function useTrips(uid) {
 
   function getShareUrl(tripId) {
     const token = encodeURIComponent(btoa(`${uid}:${tripId}`))
-    return `${window.location.origin}/travel-itinerary/v3/?share=${token}`
+    // Use current pathname so the share URL matches whichever version is deployed (v3, v3.1, etc.)
+    return `${window.location.origin}${window.location.pathname}?share=${token}`
   }
 
   return {

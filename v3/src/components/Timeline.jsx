@@ -22,7 +22,7 @@ export default function Timeline({ className = '', activeTrip, activeDayIndex, a
     <section className={`panel timeline-panel ${className}`}>
       <div className="panel-header">
         <h2><i className="fa-solid fa-route icon-accent" /> 行程規劃表</h2>
-        <button className="btn btn-primary" disabled={!hasTrip} onClick={onAddActivity}>
+        <button className="btn btn-primary" disabled={!hasTrip || activeDayIndex === null} onClick={onAddActivity}>
           <i className="fa-solid fa-plus-circle" /> 新增行程
         </button>
       </div>
@@ -43,6 +43,11 @@ export default function Timeline({ className = '', activeTrip, activeDayIndex, a
           <div className="empty-state">
             <i className="fa-solid fa-map-location-dot" />
             <p>點擊左側「+」按鈕建立新旅程，開啟您的探索之旅！</p>
+          </div>
+        ) : activeDayIndex === null ? (
+          <div className="empty-state">
+            <i className="fa-solid fa-calendar-day" />
+            <p>請從左側「日程規劃」選擇日期，以查看當天行程</p>
           </div>
         ) : (
           <>
