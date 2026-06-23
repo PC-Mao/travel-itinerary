@@ -1,4 +1,4 @@
-export default function Sidebar({ trips, activeTrip, activeDayIndex, onSelectTrip, onNewTrip, onSelectDay, onAddDay, user, onLogOut }) {
+export default function Sidebar({ trips, activeTrip, activeDayIndex, onSelectTrip, onNewTrip, onEditTrip, onSelectDay, onAddDay, onRemoveDay, user, onLogOut }) {
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -26,11 +26,18 @@ export default function Sidebar({ trips, activeTrip, activeDayIndex, onSelectTri
               className={`trip-item ${trip.id === activeTrip?.id ? 'active' : ''}`}
               onClick={() => onSelectTrip(trip.id)}
             >
-              <div className="trip-item-info">
+              <div className="trip-item-info" style={{ flex: 1, minWidth: 0 }}>
                 <span className="trip-item-title">{trip.name}</span>
                 <span className="trip-item-dates">{trip.startDate} 至 {trip.endDate}</span>
               </div>
-              <i className="fa-solid fa-chevron-right" style={{ color: 'var(--text-muted)' }} />
+              <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
+                <button className="btn-icon btn-edit-trip" title="編輯旅程"
+                  style={{ width: 26, height: 26, fontSize: '0.75rem' }}
+                  onClick={e => { e.stopPropagation(); onEditTrip(trip) }}>
+                  <i className="fa-solid fa-pen" />
+                </button>
+                <i className="fa-solid fa-chevron-right" style={{ color: 'var(--text-muted)' }} />
+              </div>
             </li>
           ))}
         </ul>
@@ -46,12 +53,22 @@ export default function Sidebar({ trips, activeTrip, activeDayIndex, onSelectTri
           </div>
           <div className="day-chips-container">
             {Array.from({ length: activeTrip.daysCount }, (_, i) => (
-              <button key={i}
-                className={`day-chip ${i === activeDayIndex ? 'active' : ''}`}
-                onClick={() => onSelectDay(i)}
-              >
-                <i className="fa-solid fa-calendar-day" /> Day {i + 1}
-              </button>
+              <div key={i} className={`day-chip ${i === activeDayIndex ? 'active' : ''}`}>
+                <button className="day-chip-label" onClick={() => {
+                  onSelectDay(i)
+                  // Scroll to day header in timeline
+                  setTimeout(() => {
+                    const el = document.getElementById(`timeline-day-${i}`)
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+                  }, 50)
+                }}>
+                  <i className="fa-solid fa-calendar-day" /> Day {i + 1}
+                </button>
+                <button className="day-chip-remove" title={`移除第 ${i + 1} 天`}
+                  onClick={e => { e.stopPropagation(); onRemoveDay(i) }}>
+                  <i className="fa-solid fa-xmark" />
+                </button>
+              </div>
             ))}
           </div>
         </div>

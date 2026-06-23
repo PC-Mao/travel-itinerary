@@ -62,6 +62,34 @@ export function useTrips(uid) {
     })
   }
 
+  async function updateTrip(tripId, { name, startDate, endDate }) {
+    if (!uid) return
+    await updateDoc(doc(db, USERS_COL, uid, 'trips', tripId), {
+      name, startDate, endDate,
+      daysCount: calcDays(startDate, endDate),
+    })
+  }
+
+  async function removeDay(tripId, dayIndex) {
+    if (!uid) return
+    const trip = trips.find(t => t.id === tripId)
+    if (!trip || trip.daysCount <= 1) return
+    const newActivities = trip.activities
+      .filter(a => a.dayIndex !== dayIndex)
+      .map(a => a.dayIndex > dayIndex ? { ...a, dayIndex: a.dayIndex - 1 } : a)
+    const newMemos = [...(trip.dayMemos || [])]
+    newMemos.splice(dayIndex, 1)
+    const newEnd = new Date(trip.endDate)
+    newEnd.setDate(newEnd.getDate() - 1)
+    await updateDoc(doc(db, USERS_COL, uid, 'trips', tripId), {
+      daysCount: trip.daysCount - 1,
+      endDate: newEnd.toISOString().split('T')[0],
+      activities: newActivities,
+      dayMemos: newMemos,
+    })
+    if (activeDayIndex >= trip.daysCount - 1) setActiveDayIndex(Math.max(0, trip.daysCount - 2))
+  }
+
   async function addActivity(act) {
     if (!uid || !activeTrip) return
     const newAct = { id: 'act-' + Date.now(), dayIndex: activeDayIndex, ...act }
@@ -70,11 +98,27 @@ export function useTrips(uid) {
     })
   }
 
+  async function updateActivity(actId, updates) {
+    if (!uid || !activeTrip) return
+    await updateDoc(doc(db, USERS_COL, uid, 'trips', activeTrip.id), {
+      activities: (activeTrip.activities ?? []).map(a => a.id === actId ? { ...a, ...updates } : a),
+    })
+  }
+
   async function deleteActivity(actId) {
     if (!uid || !activeTrip) return
     await updateDoc(doc(db, USERS_COL, uid, 'trips', activeTrip.id), {
       activities: (activeTrip.activities ?? []).filter(a => a.id !== actId),
     })
+  }
+
+  async function updateDayMemo(tripId, dayIndex, memo) {
+    if (!uid) return
+    const trip = trips.find(t => t.id === tripId)
+    if (!trip) return
+    const dayMemos = [...(trip.dayMemos || [])]
+    dayMemos[dayIndex] = memo
+    await updateDoc(doc(db, USERS_COL, uid, 'trips', tripId), { dayMemos })
   }
 
   async function addMember(tripId, name) {
@@ -112,7 +156,9 @@ export function useTrips(uid) {
     trips, activeTrip, activeDayIndex, activeCategoryFilter, loading,
     setActiveTripId, setActiveDayIndex,
     setFilter: setActiveCategoryFilter,
-    addTrip, deleteTrip, addDay, addActivity, deleteActivity,
+    addTrip, updateTrip, deleteTrip, addDay, removeDay,
+    addActivity, updateActivity, deleteActivity,
+    updateDayMemo,
     addMember, deleteMember,
     toggleShare, getShareUrl,
   }

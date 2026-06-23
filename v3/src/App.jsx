@@ -18,7 +18,9 @@ export default function App() {
   const {
     trips, activeTrip, activeDayIndex, activeCategoryFilter, loading: tripsLoading,
     setActiveTripId, setActiveDayIndex, setFilter,
-    addTrip, deleteTrip, addDay, addActivity, deleteActivity,
+    addTrip, updateTrip, deleteTrip, addDay, removeDay,
+    addActivity, updateActivity, deleteActivity,
+    updateDayMemo,
     addMember, deleteMember,
     toggleShare, getShareUrl,
   } = useTrips(user?.uid)
@@ -31,7 +33,9 @@ export default function App() {
   } = useSharedTrip(shareParam || null)
 
   const [showTripModal, setShowTripModal] = useState(false)
+  const [tripToEdit, setTripToEdit] = useState(null)
   const [showActivityModal, setShowActivityModal] = useState(false)
+  const [actToEdit, setActToEdit] = useState(null)
   const [showMembersModal, setShowMembersModal] = useState(false)
   const [lightboxPhoto, setLightboxPhoto] = useState(null)
   const [selectedActivity, setSelectedActivity] = useState(null)
@@ -181,9 +185,16 @@ export default function App() {
         activeTrip={activeTrip}
         activeDayIndex={activeDayIndex}
         onSelectTrip={handleSetActiveTripId}
-        onNewTrip={() => setShowTripModal(true)}
+        onNewTrip={() => { setTripToEdit(null); setShowTripModal(true) }}
+        onEditTrip={trip => { setTripToEdit(trip); setShowTripModal(true) }}
         onSelectDay={handleSetActiveDayIndex}
         onAddDay={addDay}
+        onRemoveDay={i => {
+          if (!activeTrip || activeTrip.daysCount <= 1) { alert('至少需要保留一天行程！'); return }
+          const acts = activeTrip.activities.filter(a => a.dayIndex === i)
+          const msg = `確定要移除第 ${i + 1} 天嗎？` + (acts.length ? `\n此天共有 ${acts.length} 個行程將一併刪除。` : '')
+          if (confirm(msg)) removeDay(activeTrip.id, i)
+        }}
         user={user}
         onLogOut={logOut}
       />
@@ -231,13 +242,18 @@ export default function App() {
         <div className="dashboard-grid">
           <Timeline
             activeTrip={activeTrip}
-            activeDayIndex={activeDayIndex}
             activeFilter={activeCategoryFilter}
             onFilter={setFilter}
-            onAddActivity={() => setShowActivityModal(true)}
+            onAddActivity={() => { setActToEdit(null); setShowActivityModal(true) }}
+            onEditActivity={act => { setActToEdit(act); setShowActivityModal(true) }}
             onDeleteActivity={id => { if (selectedActivity?.id === id) setSelectedActivity(null); deleteActivity(id) }}
             selectedActivityId={selectedActivity?.id}
             onSelectActivity={setSelectedActivity}
+            expenses={Object.fromEntries(
+              Object.entries(localExpenses)
+                .filter(([key]) => key.startsWith(`${user?.uid}_`))
+                .map(([key, val]) => [key.replace(`${user?.uid}_`, ''), val])
+            )}
           />
           <DetailsPanel
             selectedActivity={selectedActivity}
@@ -248,15 +264,34 @@ export default function App() {
             expenses={currentExpenses}
             onAddExpense={addExpense}
             onDeleteExpense={deleteExpense}
+            activeTrip={activeTrip}
+            activeDayIndex={activeDayIndex}
+            onUpdateDayMemo={memo => activeTrip && updateDayMemo(activeTrip.id, activeDayIndex, memo)}
           />
         </div>
       </main>
 
       {showTripModal && (
-        <TripModal onClose={() => setShowTripModal(false)} onSubmit={form => { addTrip(form); setShowTripModal(false) }} />
+        <TripModal
+          tripToEdit={tripToEdit}
+          onClose={() => { setShowTripModal(false); setTripToEdit(null) }}
+          onSubmit={form => {
+            if (tripToEdit) updateTrip(tripToEdit.id, form)
+            else addTrip(form)
+            setShowTripModal(false); setTripToEdit(null)
+          }}
+        />
       )}
       {showActivityModal && (
-        <ActivityModal onClose={() => setShowActivityModal(false)} onSubmit={act => { addActivity(act); setShowActivityModal(false) }} />
+        <ActivityModal
+          actToEdit={actToEdit}
+          onClose={() => { setShowActivityModal(false); setActToEdit(null) }}
+          onSubmit={form => {
+            if (actToEdit) updateActivity(actToEdit.id, form)
+            else addActivity(form)
+            setShowActivityModal(false); setActToEdit(null)
+          }}
+        />
       )}
       {showMembersModal && activeTrip && (
         <MembersModal

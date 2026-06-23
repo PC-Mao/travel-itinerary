@@ -1,23 +1,30 @@
 import { useState } from 'react'
 
-const DEFAULT = { title: '', time: '09:00', category: 'sightseeing', location: '', desc: '' }
-
-export default function ActivityModal({ onClose, onSubmit }) {
-  const [form, setForm] = useState(DEFAULT)
+export default function ActivityModal({ onClose, onSubmit, actToEdit }) {
+  const isEdit = !!actToEdit
+  const [form, setForm] = useState({
+    title: actToEdit?.title || '',
+    time: actToEdit?.time || '09:00',
+    category: actToEdit?.category || 'sightseeing',
+    location: actToEdit?.location || '',
+    desc: actToEdit?.desc || '',
+  })
   const set = key => e => setForm(s => ({ ...s, [key]: e.target.value }))
 
   function handleSubmit(e) {
     e.preventDefault()
     if (!form.title.trim() || !form.time) return
     onSubmit(form)
-    setForm(DEFAULT)
   }
 
   return (
     <div className="modal open" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="modal-content glass">
         <div className="modal-header">
-          <h2><i className="fa-solid fa-circle-plus" /> 新增行程項目</h2>
+          <h2>
+            <i className={`fa-solid ${isEdit ? 'fa-pen' : 'fa-circle-plus'}`} />
+            {isEdit ? ' 編輯行程項目' : ' 新增行程項目'}
+          </h2>
           <span className="close-btn" onClick={onClose}>&times;</span>
         </div>
         <form onSubmit={handleSubmit}>
@@ -54,7 +61,7 @@ export default function ActivityModal({ onClose, onSubmit }) {
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-link" onClick={onClose}>取消</button>
-            <button type="submit" className="btn btn-primary">加入行程</button>
+            <button type="submit" className="btn btn-primary">{isEdit ? '確認修改' : '加入行程'}</button>
           </div>
         </form>
       </div>

@@ -1,20 +1,27 @@
 import { useState } from 'react'
 
-export default function TripModal({ onClose, onSubmit }) {
-  const [form, setForm] = useState({ name: '', startDate: '', endDate: '' })
+export default function TripModal({ onClose, onSubmit, tripToEdit }) {
+  const isEdit = !!tripToEdit
+  const [form, setForm] = useState({
+    name: tripToEdit?.name || '',
+    startDate: tripToEdit?.startDate || '',
+    endDate: tripToEdit?.endDate || '',
+  })
 
   function handleSubmit(e) {
     e.preventDefault()
     if (!form.name.trim()) return
     onSubmit(form)
-    setForm({ name: '', startDate: '', endDate: '' })
   }
 
   return (
     <div className="modal open" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="modal-content glass">
         <div className="modal-header">
-          <h2><i className="fa-solid fa-earth-asia" /> 建立新旅程</h2>
+          <h2>
+            <i className={`fa-solid ${isEdit ? 'fa-pen-to-square' : 'fa-earth-asia'}`} />
+            {isEdit ? ' 編輯旅程' : ' 建立新旅程'}
+          </h2>
           <span className="close-btn" onClick={onClose}>&times;</span>
         </div>
         <form onSubmit={handleSubmit}>
@@ -37,7 +44,7 @@ export default function TripModal({ onClose, onSubmit }) {
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-link" onClick={onClose}>取消</button>
-            <button type="submit" className="btn btn-primary">建立</button>
+            <button type="submit" className="btn btn-primary">{isEdit ? '確認修改' : '建立'}</button>
           </div>
         </form>
       </div>

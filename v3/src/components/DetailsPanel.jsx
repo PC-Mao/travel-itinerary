@@ -3,11 +3,16 @@ import { useRef, useState } from 'react'
 export default function DetailsPanel({
   selectedActivity, photos, onAddPhoto, onDeletePhoto, onOpenLightbox,
   expenses, onAddExpense, onDeleteExpense,
+  activeTrip, activeDayIndex, onUpdateDayMemo,
 }) {
   const inputRef = useRef(null)
   const [dragging, setDragging] = useState(false)
   const [activeTab, setActiveTab] = useState('expenses')
   const [expForm, setExpForm] = useState({ purpose: '', amount: '' })
+  const [editingMemo, setEditingMemo] = useState(false)
+  const [memoText, setMemoText] = useState('')
+
+  const dayMemo = activeTrip?.dayMemos?.[activeDayIndex] || ''
 
   function handleFiles(files) {
     Array.from(files).forEach(file => {
@@ -28,8 +33,64 @@ export default function DetailsPanel({
 
   const total = expenses.reduce((s, ex) => s + ex.amount, 0)
 
+  function saveMemo() {
+    onUpdateDayMemo(memoText.trim())
+    setEditingMemo(false)
+  }
+
   return (
     <section className="panel details-panel">
+      {/* Day memo card — always shown when a trip is active */}
+      {activeTrip && (
+        <div id="details-day-memo-container" style={{ width: '100%', marginBottom: '4px' }}>
+          <div className="timeline-day-memo-card">
+            {editingMemo ? (
+              <div className="day-memo-edit-container">
+                <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontWeight: 700, marginBottom: '2px' }}>
+                  <i className="fa-solid fa-calendar-day" /> 第 {activeDayIndex + 1} 天備忘錄
+                </div>
+                <textarea className="day-memo-textarea" rows={2} autoFocus
+                  placeholder={`在此輸入第 ${activeDayIndex + 1} 天備忘錄…`}
+                  value={memoText}
+                  onChange={e => setMemoText(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) saveMemo()
+                    if (e.key === 'Escape') setEditingMemo(false)
+                  }}
+                />
+                <div className="day-memo-edit-actions">
+                  <button className="btn btn-secondary btn-memo-cancel"
+                    style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                    onClick={() => setEditingMemo(false)}>
+                    <i className="fa-solid fa-xmark" /> 取消
+                  </button>
+                  <button className="btn btn-primary btn-memo-save"
+                    style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                    onClick={saveMemo}>
+                    <i className="fa-solid fa-check" /> 儲存
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className={`day-memo-display ${!dayMemo ? 'empty' : ''}`}
+                onClick={() => { setMemoText(dayMemo); setEditingMemo(true) }}>
+                <i className="fa-solid fa-note-sticky day-memo-icon" style={!dayMemo ? { opacity: 0.5 } : {}} />
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)', fontWeight: 700, marginBottom: '2px' }}>
+                    第 {activeDayIndex + 1} 天備忘錄
+                  </span>
+                  <span className="day-memo-text">
+                    {dayMemo || '點擊在此新增今日備忘錄...'}
+                  </span>
+                </div>
+                <i className={`fa-solid ${dayMemo ? 'fa-pen' : 'fa-plus'} day-memo-edit-btn text-muted`}
+                  style={{ fontSize: '0.75rem', marginLeft: '8px', ...(!dayMemo ? { opacity: 0.5 } : {}) }} />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Inactive state */}
       {!selectedActivity && (
         <div id="details-inactive-state" className="empty-state" style={{ display: 'flex' }}>
