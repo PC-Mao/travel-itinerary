@@ -9,11 +9,12 @@ export default function DetailsPanel({
   const inputRef = useRef(null)
   const [dragging, setDragging] = useState(false)
   const [activeTab, setActiveTab] = useState('expenses')
-  const [expForm, setExpForm] = useState({ purpose: '', amount: '' })
+  const [expForm, setExpForm] = useState({ purpose: '', payerId: '', amount: '', sharedMemberIds: [] })
   const [editingMemo, setEditingMemo] = useState(false)
   const [memoText, setMemoText] = useState('')
 
   const dayMemo = activeTrip?.dayMemos?.[activeDayIndex] || ''
+  const members = activeTrip?.members || []
 
   function handleFiles(files) {
     Array.from(files).forEach(file => {
@@ -24,15 +25,44 @@ export default function DetailsPanel({
     })
   }
 
+  function toggleSplitMember(memberId) {
+    setExpForm(s => ({
+      ...s,
+      sharedMemberIds: s.sharedMemberIds.includes(memberId)
+        ? s.sharedMemberIds.filter(id => id !== memberId)
+        : [...s.sharedMemberIds, memberId],
+    }))
+  }
+
   function handleExpSubmit(e) {
     e.preventDefault()
     const amount = Number(expForm.amount)
     if (!amount || amount <= 0) return
-    onAddExpense({ purpose: expForm.purpose.trim(), amount })
-    setExpForm({ purpose: '', amount: '' })
+    if (members.length > 0 && !expForm.payerId) return
+    if (members.length > 0 && expForm.sharedMemberIds.length === 0) {
+      alert('請至少選擇一位參與分攤的人員！')
+      return
+    }
+    const sharedIds = members.length > 0 ? expForm.sharedMemberIds : []
+    onAddExpense({
+      purpose: expForm.purpose.trim() || '一般消費',
+      amount,
+      payerId: expForm.payerId,
+      sharedMemberIds: sharedIds,
+    })
+    setExpForm({ purpose: '', payerId: '', amount: '', sharedMemberIds: [] })
   }
 
   const total = expenses.reduce((s, ex) => s + ex.amount, 0)
+
+  function getPayerName(payerId) {
+    return members.find(m => m.id === payerId)?.name || '未知'
+  }
+
+  function getSharedNames(sharedMemberIds) {
+    if (!sharedMemberIds || sharedMemberIds.length === 0) return '全員'
+    return sharedMemberIds.map(id => members.find(m => m.id === id)?.name || '?').join(', ')
+  }
 
   function saveMemo() {
     onUpdateDayMemo(memoText.trim())
@@ -143,7 +173,9 @@ export default function DetailsPanel({
                   <div key={ex.id} className="expense-item">
                     <div className="expense-item-info">
                       <span className="expense-purpose">{ex.purpose || '未填項目'}</span>
-                      <span className="expense-meta">{ex.time}</span>
+                      <span className="expense-meta" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
+                        {ex.payerId ? `付款：${getPayerName(ex.payerId)} | 分攤：${getSharedNames(ex.sharedMemberIds)}` : ex.time}
+                      </span>
                     </div>
                     <div className="expense-amount-area">
                       <span className="expense-amount">${ex.amount.toLocaleString()}</span>
@@ -161,19 +193,58 @@ export default function DetailsPanel({
                 <h4 style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <i className="fa-solid fa-plus-circle" style={{ color: 'var(--accent-cyan)' }} /> 新增消費紀錄
                 </h4>
+
+                {/* Payer & amount */}
                 <div className="form-row">
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label htmlFor="expense-purpose-v3">消費項目 / 用途</label>
-                    <input type="text" id="expense-purpose-v3" placeholder="例如：門票、餐費" style={{ padding: '8px 12px', fontSize: '0.9rem' }}
-                      value={expForm.purpose} onChange={e => setExpForm(s => ({ ...s, purpose: e.target.value }))} />
+                    <label>付款人 {members.length > 0 && <span className="required">*</span>}</label>
+                    {members.length > 0 ? (
+                      <select value={expForm.payerId} required
+                        onChange={e => setExpForm(s => ({ ...s, payerId: e.target.value }))}
+                        style={{ padding: '8px 12px', fontSize: '0.9rem' }}>
+                        <option value="" disabled>選擇付款人</option>
+                        {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                      </select>
+                    ) : (
+                      <input type="text" placeholder="先至成員管理新增旅伴" disabled
+                        style={{ padding: '8px 12px', fontSize: '0.9rem', opacity: 0.5 }} />
+                    )}
                   </div>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label htmlFor="expense-amount-v3">金額 ($) <span className="required">*</span></label>
-                    <input type="number" id="expense-amount-v3" min="1" required placeholder="例如：200" style={{ padding: '8px 12px', fontSize: '0.9rem' }}
+                    <label>金額 ($) <span className="required">*</span></label>
+                    <input type="number" min="1" required placeholder="例如：200"
+                      style={{ padding: '8px 12px', fontSize: '0.9rem' }}
                       value={expForm.amount} onChange={e => setExpForm(s => ({ ...s, amount: e.target.value }))} />
                   </div>
                 </div>
-                <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: '0.9rem', marginTop: '4px' }}>
+
+                {/* Purpose */}
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label>消費項目 / 用途</label>
+                  <input type="text" placeholder="例如：門票、餐費（選填）"
+                    style={{ padding: '8px 12px', fontSize: '0.9rem' }}
+                    value={expForm.purpose} onChange={e => setExpForm(s => ({ ...s, purpose: e.target.value }))} />
+                </div>
+
+                {/* Split members */}
+                {members.length > 0 && (
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label>參與分攤人員 <span className="required">*</span></label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+                      {members.map(m => (
+                        <label key={m.id} className="checkbox-chip">
+                          <input type="checkbox"
+                            checked={expForm.sharedMemberIds.includes(m.id)}
+                            onChange={() => toggleSplitMember(m.id)} />
+                          {m.name}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button type="submit" className="btn btn-primary"
+                  style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: '0.9rem' }}>
                   <i className="fa-solid fa-check" /> 加入帳目
                 </button>
               </form>

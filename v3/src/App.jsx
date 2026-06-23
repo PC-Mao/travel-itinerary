@@ -387,6 +387,12 @@ export default function App() {
           onAddMember={name => addMember(activeTrip.id, name)}
           onDeleteMember={id => deleteMember(activeTrip.id, id)}
           onClose={() => setShowMembersModal(false)}
+          allExpenses={
+            (activeTrip.activities || []).flatMap(act => {
+              const key = expKey(act.id)
+              return (localExpenses[key] || [])
+            })
+          }
         />
       )}
       <Lightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
