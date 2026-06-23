@@ -937,20 +937,167 @@ textarea {
     }
 }
 
+/* Mobile elements hidden on desktop */
+.mobile-header,
+.mobile-tab-bar,
+.drawer-overlay,
+.drawer-close-btn {
+    display: none;
+}
+
 @media (max-width: 768px) {
+    /* 1. App container: single column, full height */
     .app-container {
         grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
     }
-    
+
+    /* 2. Sidebar becomes a slide-in drawer */
     .sidebar {
-        height: auto;
-        position: relative;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 80vw;
+        max-width: 300px;
+        height: 100dvh;
+        z-index: 500;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-right: 1px solid var(--border-color);
+        border-bottom: none;
+        overflow-y: auto;
     }
-    
+
+    .sidebar.drawer-open {
+        transform: translateX(0);
+        box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5);
+    }
+
+    /* 3. Drawer close button (hidden on desktop) */
+    .drawer-close-btn {
+        display: flex;
+        flex-shrink: 0;
+    }
+
+    /* 4. Semi-transparent overlay behind drawer */
+    .drawer-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 499;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+
+    .drawer-overlay.visible {
+        display: block;
+    }
+
+    /* 5. Mobile top header bar */
+    .mobile-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        padding-top: max(12px, env(safe-area-inset-top, 12px));
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* 6. Main content: remove fixed height, add bottom padding for tab bar */
     .main-content {
-        padding: 16px;
+        padding: 0;
+        height: auto;
+        overflow: visible;
+    }
+
+    /* 7. Hide desktop top-nav (replaced by mobile-header) */
+    .top-nav {
+        display: none;
+    }
+
+    /* 8. Dashboard panels: single column, with bottom padding for tab bar */
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 12px;
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* 9. Hide non-active panel on mobile (controlled by JS class) */
+    .panel-hidden-mobile {
+        display: none !important;
+    }
+
+    /* 10. Bottom tab bar */
+    .mobile-tab-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border-color);
+        z-index: 200;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .mobile-tab-btn {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 10px 8px;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 0.65rem;
+        font-family: var(--font-sans);
+        font-weight: 600;
+        cursor: pointer;
+        transition: color var(--transition-fast);
+        min-height: 56px;
+        letter-spacing: 0.3px;
+    }
+
+    .mobile-tab-btn i {
+        font-size: 1.25rem;
+    }
+
+    .mobile-tab-btn.active {
+        color: var(--accent-cyan);
+    }
+
+    /* 11. Touch target minimum 44px for interactive elements */
+    .btn-icon {
+        width: 44px;
+        height: 44px;
+    }
+
+    .day-chip {
+        padding: 10px 14px;
+        font-size: 0.9rem;
+    }
+
+    .trip-item {
+        padding: 14px 16px;
+    }
+
+    /* 12. Modal full-width on mobile */
+    .modal-content {
+        max-width: 100%;
+        margin: 0 12px;
+        padding: 24px 20px;
+        border-radius: var(--radius-md);
     }
 }
 

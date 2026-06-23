@@ -1,11 +1,14 @@
-export default function Sidebar({ trips, activeTrip, activeDayIndex, onSelectTrip, onNewTrip, onEditTrip, onSelectDay, onAddDay, onRemoveDay, user, onLogOut }) {
+export default function Sidebar({ drawerOpen, onCloseDrawer, trips, activeTrip, activeDayIndex, onSelectTrip, onNewTrip, onEditTrip, onSelectDay, onAddDay, onRemoveDay, user, onLogOut }) {
   return (
-    <aside className="sidebar">
-      <div className="brand">
+    <aside className={`sidebar ${drawerOpen ? 'drawer-open' : ''}`}>
+      <div className="brand" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="logo">
           <i className="fa-solid fa-compass-drafting logo-icon" />
           <span>StellarVoyage</span>
         </div>
+        <button className="btn-icon drawer-close-btn" title="關閉選單" onClick={onCloseDrawer}>
+          <i className="fa-solid fa-xmark" />
+        </button>
       </div>
 
       <div className="sidebar-section">

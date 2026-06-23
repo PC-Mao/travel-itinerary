@@ -41,6 +41,10 @@ export default function App() {
   const [selectedActivity, setSelectedActivity] = useState(null)
   const [shareCopied, setShareCopied] = useState(false)
 
+  // Mobile navigation state
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [mobileTab, setMobileTab] = useState('timeline') // 'timeline' | 'details'
+
   const [localPhotos, setLocalPhotos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('sv_v3_photos') || '{}') } catch { return {} }
   })
@@ -180,14 +184,22 @@ export default function App() {
   // Main app
   return (
     <div className="app-container">
+      {/* Drawer overlay (mobile only) */}
+      <div
+        className={`drawer-overlay ${drawerOpen ? 'visible' : ''}`}
+        onClick={() => setDrawerOpen(false)}
+      />
+
       <Sidebar
+        drawerOpen={drawerOpen}
+        onCloseDrawer={() => setDrawerOpen(false)}
         trips={trips}
         activeTrip={activeTrip}
         activeDayIndex={activeDayIndex}
-        onSelectTrip={handleSetActiveTripId}
+        onSelectTrip={id => { handleSetActiveTripId(id); setDrawerOpen(false) }}
         onNewTrip={() => { setTripToEdit(null); setShowTripModal(true) }}
         onEditTrip={trip => { setTripToEdit(trip); setShowTripModal(true) }}
-        onSelectDay={handleSetActiveDayIndex}
+        onSelectDay={i => { handleSetActiveDayIndex(i); setDrawerOpen(false) }}
         onAddDay={addDay}
         onRemoveDay={i => {
           if (!activeTrip || activeTrip.daysCount <= 1) { alert('至少需要保留一天行程！'); return }
@@ -200,6 +212,48 @@ export default function App() {
       />
 
       <main className="main-content">
+        {/* Mobile top header (hidden on desktop) */}
+        <header className="mobile-header">
+          <button className="btn-icon" onClick={() => setDrawerOpen(true)} title="開啟選單">
+            <i className="fa-solid fa-bars" />
+          </button>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: '1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {activeTrip ? activeTrip.name : 'StellarVoyage'}
+            </div>
+            {activeTrip && (
+              <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)' }}>
+                {formatDateRange(activeTrip.startDate, activeTrip.endDate)}
+              </div>
+            )}
+          </div>
+          {activeTrip && (
+            <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+              <button
+                className="btn-icon"
+                style={activeTrip.isShared ? { borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' } : {}}
+                title={activeTrip.isShared ? '關閉分享' : '開啟分享並複製連結'}
+                onClick={() => handleShare(activeTrip.id)}
+              >
+                <i className={`fa-solid ${activeTrip.isShared ? 'fa-link' : 'fa-share-nodes'}`} />
+              </button>
+              <button className="btn-icon" title="成員管理" onClick={() => setShowMembersModal(true)}>
+                <i className="fa-solid fa-users-gear" />
+              </button>
+              <button className="btn-icon" style={{ color: 'var(--danger)', borderColor: 'hsla(354,85%,60%,0.3)' }}
+                title="刪除旅程"
+                onClick={() => {
+                  if (confirm(`確定要刪除整個旅程「${activeTrip.name}」與所有相關行程嗎？`))
+                    deleteTrip(activeTrip.id)
+                }}
+              >
+                <i className="fa-solid fa-trash" />
+              </button>
+            </div>
+          )}
+        </header>
+
+        {/* Desktop top-nav (hidden on mobile) */}
         <header className="top-nav">
           <div className="trip-title-area">
             <h1>{activeTrip ? activeTrip.name : '尚未選擇旅程'}</h1>
@@ -241,6 +295,7 @@ export default function App() {
 
         <div className="dashboard-grid">
           <Timeline
+            className={mobileTab !== 'timeline' ? 'panel-hidden-mobile' : ''}
             activeTrip={activeTrip}
             activeFilter={activeCategoryFilter}
             onFilter={setFilter}
@@ -248,7 +303,7 @@ export default function App() {
             onEditActivity={act => { setActToEdit(act); setShowActivityModal(true) }}
             onDeleteActivity={id => { if (selectedActivity?.id === id) setSelectedActivity(null); deleteActivity(id) }}
             selectedActivityId={selectedActivity?.id}
-            onSelectActivity={setSelectedActivity}
+            onSelectActivity={act => { setSelectedActivity(act); setMobileTab('details') }}
             expenses={Object.fromEntries(
               Object.entries(localExpenses)
                 .filter(([key]) => key.startsWith(`${user?.uid}_`))
@@ -256,6 +311,7 @@ export default function App() {
             )}
           />
           <DetailsPanel
+            className={mobileTab !== 'details' ? 'panel-hidden-mobile' : ''}
             selectedActivity={selectedActivity}
             photos={currentPhotos}
             onAddPhoto={addPhoto}
@@ -269,6 +325,31 @@ export default function App() {
             onUpdateDayMemo={memo => activeTrip && updateDayMemo(activeTrip.id, activeDayIndex, memo)}
           />
         </div>
+
+        {/* Mobile bottom tab bar (hidden on desktop) */}
+        <nav className="mobile-tab-bar">
+          <button
+            className={`mobile-tab-btn ${drawerOpen ? 'active' : ''}`}
+            onClick={() => setDrawerOpen(true)}
+          >
+            <i className="fa-solid fa-map" />
+            <span>行程</span>
+          </button>
+          <button
+            className={`mobile-tab-btn ${mobileTab === 'timeline' && !drawerOpen ? 'active' : ''}`}
+            onClick={() => { setMobileTab('timeline'); setDrawerOpen(false) }}
+          >
+            <i className="fa-solid fa-list-check" />
+            <span>時間軸</span>
+          </button>
+          <button
+            className={`mobile-tab-btn ${mobileTab === 'details' && !drawerOpen ? 'active' : ''}`}
+            onClick={() => { setMobileTab('details'); setDrawerOpen(false) }}
+          >
+            <i className="fa-solid fa-wallet" />
+            <span>詳情</span>
+          </button>
+        </nav>
       </main>
 
       {showTripModal && (

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 
 export default function DetailsPanel({
+  className = '',
   selectedActivity, photos, onAddPhoto, onDeletePhoto, onOpenLightbox,
   expenses, onAddExpense, onDeleteExpense,
   activeTrip, activeDayIndex, onUpdateDayMemo,
@@ -39,7 +40,7 @@ export default function DetailsPanel({
   }
 
   return (
-    <section className="panel details-panel">
+    <section className={`panel details-panel ${className}`}>
       {/* Day memo card — always shown when a trip is active */}
       {activeTrip && (
         <div id="details-day-memo-container" style={{ width: '100%', marginBottom: '4px' }}>
