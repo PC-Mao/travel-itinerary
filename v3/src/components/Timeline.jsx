@@ -72,7 +72,7 @@ export default function Timeline({ className = '', activeTrip, activeDayIndex, a
                   */}
                   <div
                     style={{ cursor: 'pointer' }}
-                    onClick={() => onSelectActivity(isSelected ? null : act)}
+                    onClick={() => onSelectActivity(act)}
                   >
                     <div className="timeline-bullet" />
                     <span className="timeline-time-badge">{act.time}</span>

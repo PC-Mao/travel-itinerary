@@ -628,6 +628,24 @@ body {
     opacity: 1;
 }
 
+/*
+ * Touch devices have no real hover, so the hover-only reveal of action
+ * buttons leaves them invisible/untappable. Force them always visible and
+ * tappable on ANY touch device, independent of viewport width (covers large
+ * phones, tablets, and landscape that may exceed the 768px breakpoint).
+ */
+@media (hover: none), (pointer: coarse) {
+    .timeline-actions {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+    .timeline-actions .btn-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+}
+
 /* Photo Gallery & Upload Dropzone */
 .gallery-info-bar {
     font-size: 0.8rem;
