@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export default function ActivityModal({ onClose, onSubmit, actToEdit }) {
   const isEdit = !!actToEdit
@@ -11,6 +11,13 @@ export default function ActivityModal({ onClose, onSubmit, actToEdit }) {
   })
   const set = key => e => setForm(s => ({ ...s, [key]: e.target.value }))
 
+  // Prevent ghost tap from closing modal immediately after opening on mobile
+  const canClose = useRef(false)
+  useEffect(() => {
+    const t = setTimeout(() => { canClose.current = true }, 300)
+    return () => clearTimeout(t)
+  }, [])
+
   function handleSubmit(e) {
     e.preventDefault()
     if (!form.title.trim() || !form.time) return
@@ -18,7 +25,10 @@ export default function ActivityModal({ onClose, onSubmit, actToEdit }) {
   }
 
   return (
-    <div className="modal open" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div className="modal open" onClick={e => {
+      if (!canClose.current) return
+      if (e.target === e.currentTarget) onClose()
+    }}>
       <div className="modal-content glass">
         <div className="modal-header">
           <h2>

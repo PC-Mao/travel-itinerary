@@ -1057,6 +1057,14 @@ textarea {
     /* 11. Timeline action buttons always visible on touch (no hover on mobile) */
     .timeline-actions {
         opacity: 1;
+        pointer-events: all;
+    }
+
+    /* Larger touch targets for edit/delete buttons on mobile */
+    .timeline-actions .btn-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
     }
 
     /* 12. Remove card lift on touch (avoids sticky-hover glitch) */

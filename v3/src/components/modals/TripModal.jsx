@@ -1,7 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export default function TripModal({ onClose, onSubmit, tripToEdit }) {
   const isEdit = !!tripToEdit
+  const canClose = useRef(false)
+  useEffect(() => {
+    const t = setTimeout(() => { canClose.current = true }, 300)
+    return () => clearTimeout(t)
+  }, [])
   const [form, setForm] = useState({
     name: tripToEdit?.name || '',
     startDate: tripToEdit?.startDate || '',
@@ -15,7 +20,10 @@ export default function TripModal({ onClose, onSubmit, tripToEdit }) {
   }
 
   return (
-    <div className="modal open" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div className="modal open" onClick={e => {
+      if (!canClose.current) return
+      if (e.target === e.currentTarget) onClose()
+    }}>
       <div className="modal-content glass">
         <div className="modal-header">
           <h2>
