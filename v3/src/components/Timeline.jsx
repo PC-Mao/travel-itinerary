@@ -11,7 +11,6 @@ const FILTERS = [
 export default function Timeline({ className = '', activeTrip, activeDayIndex, activeFilter, onFilter, onAddActivity, onEditActivity, onDeleteActivity, selectedActivityId, onSelectActivity, expenses }) {
   const hasTrip = !!activeTrip
 
-  // Only show activities for the selected day
   let activities = hasTrip
     ? activeTrip.activities.filter(a => a.dayIndex === activeDayIndex)
     : []
@@ -51,7 +50,6 @@ export default function Timeline({ className = '', activeTrip, activeDayIndex, a
           </div>
         ) : (
           <>
-            {/* Current day header */}
             <div className="timeline-day-header" id={`timeline-day-${activeDayIndex}`}>
               <i className="fa-solid fa-calendar-day" /> 第 {activeDayIndex + 1} 天 (Day {activeDayIndex + 1})
             </div>
@@ -63,47 +61,58 @@ export default function Timeline({ className = '', activeTrip, activeDayIndex, a
             ) : activities.map(act => {
               const actExpenses = expenses?.[act.id] || []
               const expTotal = actExpenses.reduce((s, e) => s + e.amount, 0)
+              const isSelected = act.id === selectedActivityId
 
               return (
-                <article
-                  key={act.id}
-                  className={`timeline-item ${act.id === selectedActivityId ? 'active' : ''}`}
-                  onClick={e => {
-                    // Ignore clicks originating from action buttons (edit/delete)
-                    if (e.target.closest('.timeline-actions')) return
-                    onSelectActivity(act.id === selectedActivityId ? null : act)
-                  }}
-                >
-                  <div className="timeline-bullet" />
-                  <span className="timeline-time-badge">{act.time}</span>
-                  <div className="timeline-title-row">
-                    <h4>{act.title}</h4>
-                    <span className={`activity-badge badge-${act.category}`}>
-                      {CATEGORY_LABELS[act.category] || '其他'}
-                    </span>
-                  </div>
-                  {act.location && (
-                    <div className="timeline-location">
-                      <i className="fa-solid fa-location-dot" />
-                      <span>{act.location}</span>
+                <article key={act.id} className={`timeline-item ${isSelected ? 'active' : ''}`}>
+                  {/*
+                    Content area: clicking selects/deselects the activity.
+                    Kept separate from .timeline-actions so buttons are fully
+                    independent on both desktop and mobile.
+                  */}
+                  <div
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => onSelectActivity(isSelected ? null : act)}
+                  >
+                    <div className="timeline-bullet" />
+                    <span className="timeline-time-badge">{act.time}</span>
+                    <div className="timeline-title-row">
+                      <h4>{act.title}</h4>
+                      <span className={`activity-badge badge-${act.category}`}>
+                        {CATEGORY_LABELS[act.category] || '其他'}
+                      </span>
                     </div>
-                  )}
-                  {act.desc && <p className="timeline-desc">{act.desc}</p>}
-                  {expTotal > 0 && (
-                    <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, marginTop: '6px' }}>
-                      <i className="fa-solid fa-wallet" /> 支出: ${expTotal.toLocaleString()}
-                    </span>
-                  )}
+                    {act.location && (
+                      <div className="timeline-location">
+                        <i className="fa-solid fa-location-dot" />
+                        <span>{act.location}</span>
+                      </div>
+                    )}
+                    {act.desc && <p className="timeline-desc">{act.desc}</p>}
+                    {expTotal > 0 && (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, marginTop: '6px' }}>
+                        <i className="fa-solid fa-wallet" /> 支出: ${expTotal.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Action buttons: completely independent, no parent click interference */}
                   <div className="timeline-actions">
-                    <button className="btn-icon" title="編輯行程" style={{ marginRight: '8px' }}
-                      onClick={e => { e.stopPropagation(); onEditActivity(act) }}>
+                    <button
+                      className="btn-icon"
+                      title="編輯行程"
+                      style={{ marginRight: '8px' }}
+                      onClick={() => onEditActivity(act)}
+                    >
                       <i className="fa-solid fa-pen" style={{ color: 'var(--accent-cyan)' }} />
                     </button>
-                    <button className="btn-icon" title="刪除行程"
-                      onClick={e => {
-                        e.stopPropagation()
+                    <button
+                      className="btn-icon"
+                      title="刪除行程"
+                      onClick={() => {
                         if (confirm(`確定要刪除行程「${act.title}」嗎？`)) onDeleteActivity(act.id)
-                      }}>
+                      }}
+                    >
                       <i className="fa-solid fa-trash-can" style={{ color: 'var(--danger)' }} />
                     </button>
                   </div>
