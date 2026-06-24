@@ -68,7 +68,11 @@ export default function Timeline({ className = '', activeTrip, activeDayIndex, a
                 <article
                   key={act.id}
                   className={`timeline-item ${act.id === selectedActivityId ? 'active' : ''}`}
-                  onClick={() => onSelectActivity(act.id === selectedActivityId ? null : act)}
+                  onClick={e => {
+                    // Ignore clicks originating from action buttons (edit/delete)
+                    if (e.target.closest('.timeline-actions')) return
+                    onSelectActivity(act.id === selectedActivityId ? null : act)
+                  }}
                 >
                   <div className="timeline-bullet" />
                   <span className="timeline-time-badge">{act.time}</span>
