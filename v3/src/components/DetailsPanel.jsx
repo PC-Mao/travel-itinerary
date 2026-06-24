@@ -199,21 +199,21 @@ export default function DetailsPanel({
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label>付款人 {members.length > 0 && <span className="required">*</span>}</label>
                     {members.length > 0 ? (
-                      <select value={expForm.payerId} required
+                      <select id="expense-payer" value={expForm.payerId} required
                         onChange={e => setExpForm(s => ({ ...s, payerId: e.target.value }))}
                         style={{ padding: '8px 12px', fontSize: '0.9rem' }}>
                         <option value="" disabled>選擇付款人</option>
                         {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                       </select>
                     ) : (
-                      <input type="text" placeholder="先至成員管理新增旅伴" disabled
+                      <input type="text" placeholder="先至成員分帳新增旅伴" disabled
                         style={{ padding: '8px 12px', fontSize: '0.9rem', opacity: 0.5 }} />
                     )}
                   </div>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label>金額 ($) <span className="required">*</span></label>
-                    <input type="number" min="1" required placeholder="例如：200"
-                      style={{ padding: '8px 12px', fontSize: '0.9rem' }}
+                    <input type="number" id="expense-amount" min="1" required placeholder="例如：200"
+                      style={{ padding: '8px 12px', fontSize: '0.9rem', backgroundColor: '#f9fafb', color: '#111827', fontWeight: 600 }}
                       value={expForm.amount} onChange={e => setExpForm(s => ({ ...s, amount: e.target.value }))} />
                   </div>
                 </div>

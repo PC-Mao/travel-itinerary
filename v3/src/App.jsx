@@ -243,7 +243,7 @@ export default function App() {
               >
                 <i className={`fa-solid ${activeTrip.isShared ? 'fa-link' : 'fa-share-nodes'}`} />
               </button>
-              <button className="btn-icon" title="成員管理" onClick={() => setShowMembersModal(true)}>
+              <button className="btn-icon" title="成員分帳" onClick={() => setShowMembersModal(true)}>
                 <i className="fa-solid fa-users-gear" />
               </button>
               <button className="btn-icon" style={{ color: 'var(--danger)', borderColor: 'hsla(354,85%,60%,0.3)' }}
@@ -273,7 +273,7 @@ export default function App() {
             <div className="header-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <button id="btn-manage-members" className="btn btn-secondary"
                 onClick={() => setShowMembersModal(true)}>
-                <i className="fa-solid fa-users-gear" /> 成員管理
+                <i className="fa-solid fa-users-gear" /> 成員分帳
               </button>
               <button
                 className="btn btn-secondary"
