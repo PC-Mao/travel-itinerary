@@ -43,12 +43,11 @@ export default function DetailsPanel({
       alert('請至少選擇一位參與分攤的人員！')
       return
     }
-    const sharedIds = members.length > 0 ? expForm.sharedMemberIds : []
     onAddExpense({
       purpose: expForm.purpose.trim() || '一般消費',
       amount,
       payerId: expForm.payerId,
-      sharedMemberIds: sharedIds,
+      sharedMemberIds: members.length > 0 ? expForm.sharedMemberIds : [],
     })
     setExpForm({ purpose: '', payerId: '', amount: '', sharedMemberIds: [] })
   }
@@ -71,9 +70,10 @@ export default function DetailsPanel({
 
   return (
     <section className={`panel details-panel ${className}`}>
-      {/* Day memo card — always shown when a trip is active */}
+
+      {/* ── 備忘錄（選了旅程就常駐） ── */}
       {activeTrip && (
-        <div id="details-day-memo-container" style={{ width: '100%', marginBottom: '4px' }}>
+        <div style={{ width: '100%', marginBottom: '4px' }}>
           <div className="timeline-day-memo-card">
             {editingMemo ? (
               <div className="day-memo-edit-container">
@@ -90,13 +90,11 @@ export default function DetailsPanel({
                   }}
                 />
                 <div className="day-memo-edit-actions">
-                  <button className="btn btn-secondary btn-memo-cancel"
-                    style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                  <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}
                     onClick={() => setEditingMemo(false)}>
                     <i className="fa-solid fa-xmark" /> 取消
                   </button>
-                  <button className="btn btn-primary btn-memo-save"
-                    style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                  <button className="btn btn-primary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}
                     onClick={saveMemo}>
                     <i className="fa-solid fa-check" /> 儲存
                   </button>
@@ -122,25 +120,28 @@ export default function DetailsPanel({
         </div>
       )}
 
-      {/* Inactive state */}
-      {!selectedActivity && (
-        <div id="details-inactive-state" className="empty-state" style={{ display: 'flex' }}>
+      {/* ── 無旅程時的佔位符 ── */}
+      {!activeTrip && (
+        <div className="empty-state" style={{ display: 'flex' }}>
           <i className="fa-solid fa-arrow-pointer" style={{ fontSize: '3.5rem', marginBottom: '8px', opacity: 0.5 }} />
           <h3 style={{ fontWeight: 700, color: 'var(--text-primary)' }}>探索行程詳情</h3>
           <p style={{ fontSize: '0.9rem', maxWidth: '320px', color: 'var(--text-muted)' }}>
-            請點擊左側行程規劃表中的任一「行程項目」，即可開啟該活動的旅遊照片與記帳管理。
+            請先從左側建立或選擇一個旅程。
           </p>
         </div>
       )}
 
-      {/* Active state */}
-      {selectedActivity && (
-        <div id="details-active-content" style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-          {/* Panel header + tabs */}
+      {/* ── 選了旅程就常駐顯示的詳情內容 ── */}
+      {activeTrip && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+
+          {/* Panel header：顯示選取的景點名稱或提示 */}
           <div className="panel-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-            <h2 id="details-heading" style={{ fontSize: '1.15rem' }}>
+            <h2 style={{ fontSize: '1.15rem' }}>
               <i className="fa-solid fa-map-pin icon-accent" />
-              <span id="details-title-text" style={{ marginLeft: '8px' }}>{selectedActivity.title}</span>
+              <span style={{ marginLeft: '8px' }}>
+                {selectedActivity ? selectedActivity.title : '行程詳情'}
+              </span>
             </h2>
             <div className="segmented-control">
               <button className={`tab-btn ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => setActiveTab('expenses')}>
@@ -152,149 +153,157 @@ export default function DetailsPanel({
             </div>
           </div>
 
-          {/* Tab: 景點記帳 */}
+          {/* ── Tab: 景點記帳 ── */}
           {activeTab === 'expenses' && (
-            <div id="subtab-expenses" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Total */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+              {/* 總花費 */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'hsla(180, 100%, 48%, 0.05)', padding: '8px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid hsla(180, 100%, 48%, 0.15)' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>本項景點總花費</span>
-                <span id="activity-expense-total" style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--accent-cyan)' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                  {selectedActivity ? '本項景點總花費' : '選取景點以記帳'}
+                </span>
+                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--accent-cyan)' }}>
                   ${total.toLocaleString()}
                 </span>
               </div>
 
-              {/* Expense list */}
-              <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', padding: '2px' }}>
-                {expenses.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '20px 0' }}>
-                    尚無消費紀錄，記下第一筆支出吧！
-                  </p>
-                ) : expenses.map(ex => (
-                  <div key={ex.id} className="expense-item">
-                    <div className="expense-item-info">
-                      <span className="expense-purpose">{ex.purpose || '未填項目'}</span>
-                      <span className="expense-meta" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
-                        {ex.payerId ? `付款：${getPayerName(ex.payerId)} | 分攤：${getSharedNames(ex.sharedMemberIds)}` : ex.time}
-                      </span>
+              {/* 新增消費表單（選了景點才啟用） */}
+              {selectedActivity ? (
+                <form onSubmit={handleExpSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <h4 style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <i className="fa-solid fa-plus-circle" style={{ color: 'var(--accent-cyan)' }} /> 新增消費紀錄
+                  </h4>
+                  <div className="form-row">
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label>付款人 {members.length > 0 && <span className="required">*</span>}</label>
+                      {members.length > 0 ? (
+                        <select value={expForm.payerId} required
+                          onChange={e => setExpForm(s => ({ ...s, payerId: e.target.value }))}
+                          style={{ padding: '8px 12px', fontSize: '0.9rem', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                          <option value="" disabled>選擇付款人</option>
+                          {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                        </select>
+                      ) : (
+                        <input type="text" placeholder="先至成員分帳新增旅伴" disabled
+                          style={{ padding: '8px 12px', fontSize: '0.9rem', opacity: 0.5 }} />
+                      )}
                     </div>
-                    <div className="expense-amount-area">
-                      <span className="expense-amount">${ex.amount.toLocaleString()}</span>
-                      <button className="btn-icon" style={{ width: 24, height: 24, flexShrink: 0 }}
-                        onClick={() => onDeleteExpense(ex.id)} title="刪除">
-                        <i className="fa-solid fa-xmark" style={{ fontSize: '0.75rem', color: 'var(--danger)' }} />
-                      </button>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label>金額 ($) <span className="required">*</span></label>
+                      <input type="number" min="1" required placeholder="例如：200"
+                        style={{ padding: '8px 12px', fontSize: '0.9rem', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                        value={expForm.amount} onChange={e => setExpForm(s => ({ ...s, amount: e.target.value }))} />
                     </div>
                   </div>
-                ))}
-              </div>
-
-              {/* Add expense form */}
-              <form onSubmit={handleExpSubmit} style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <h4 style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <i className="fa-solid fa-plus-circle" style={{ color: 'var(--accent-cyan)' }} /> 新增消費紀錄
-                </h4>
-
-                {/* Payer & amount */}
-                <div className="form-row">
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label>付款人 {members.length > 0 && <span className="required">*</span>}</label>
-                    {members.length > 0 ? (
-                      <select value={expForm.payerId} required
-                        onChange={e => setExpForm(s => ({ ...s, payerId: e.target.value }))}
-                        style={{ padding: '8px 12px', fontSize: '0.9rem', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-                        <option value="" disabled>選擇付款人</option>
-                        {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                      </select>
-                    ) : (
-                      <input type="text" placeholder="先至成員分帳新增旅伴" disabled
-                        style={{ padding: '8px 12px', fontSize: '0.9rem', opacity: 0.5 }} />
-                    )}
+                    <label>消費項目 / 用途</label>
+                    <input type="text" placeholder="例如：門票、餐費（選填）"
+                      style={{ padding: '8px 12px', fontSize: '0.9rem' }}
+                      value={expForm.purpose} onChange={e => setExpForm(s => ({ ...s, purpose: e.target.value }))} />
                   </div>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label>金額 ($) <span className="required">*</span></label>
-                    <input type="number" min="1" required placeholder="例如：200"
-                      style={{ padding: '8px 12px', fontSize: '0.9rem', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}
-                      value={expForm.amount} onChange={e => setExpForm(s => ({ ...s, amount: e.target.value }))} />
+                  {members.length > 0 && (
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label>參與分攤人員 <span className="required">*</span></label>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+                        {members.map(m => (
+                          <label key={m.id} className="checkbox-chip">
+                            <input type="checkbox"
+                              checked={expForm.sharedMemberIds.includes(m.id)}
+                              onChange={() => toggleSplitMember(m.id)} />
+                            {m.name}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <button type="submit" className="btn btn-primary"
+                    style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: '0.9rem' }}>
+                    <i className="fa-solid fa-check" /> 加入帳目
+                  </button>
+                </form>
+              ) : (
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '12px 0' }}>
+                  <i className="fa-solid fa-arrow-left" style={{ marginRight: '6px' }} />
+                  點擊左側行程項目以開始記帳
+                </p>
+              )}
+
+              {/* 費用紀錄列表（在「加入帳目」下方） */}
+              {expenses.length > 0 && (
+                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>消費紀錄</span>
+                  <div style={{ maxHeight: '240px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', padding: '2px' }}>
+                    {expenses.map(ex => (
+                      <div key={ex.id} className="expense-item">
+                        <div className="expense-item-info">
+                          <span className="expense-purpose">{ex.purpose || '未填項目'}</span>
+                          <span className="expense-meta" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
+                            {ex.payerId ? `付款：${getPayerName(ex.payerId)} | 分攤：${getSharedNames(ex.sharedMemberIds)}` : ex.time}
+                          </span>
+                        </div>
+                        <div className="expense-amount-area">
+                          <span className="expense-amount">${ex.amount.toLocaleString()}</span>
+                          <button className="btn-icon" style={{ width: 24, height: 24, flexShrink: 0 }}
+                            onClick={() => onDeleteExpense(ex.id)} title="刪除">
+                            <i className="fa-solid fa-xmark" style={{ fontSize: '0.75rem', color: 'var(--danger)' }} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-
-                {/* Purpose */}
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label>消費項目 / 用途</label>
-                  <input type="text" placeholder="例如：門票、餐費（選填）"
-                    style={{ padding: '8px 12px', fontSize: '0.9rem' }}
-                    value={expForm.purpose} onChange={e => setExpForm(s => ({ ...s, purpose: e.target.value }))} />
-                </div>
-
-                {/* Split members */}
-                {members.length > 0 && (
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label>參與分攤人員 <span className="required">*</span></label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
-                      {members.map(m => (
-                        <label key={m.id} className="checkbox-chip">
-                          <input type="checkbox"
-                            checked={expForm.sharedMemberIds.includes(m.id)}
-                            onChange={() => toggleSplitMember(m.id)} />
-                          {m.name}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <button type="submit" className="btn btn-primary"
-                  style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: '0.9rem' }}>
-                  <i className="fa-solid fa-check" /> 加入帳目
-                </button>
-              </form>
+              )}
             </div>
           )}
 
-          {/* Tab: 照片記錄 */}
+          {/* ── Tab: 照片記錄 ── */}
           {activeTab === 'photos' && (
-            <div id="subtab-photos" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>已連結至此行程的精彩照片</span>
-                <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                  onClick={() => inputRef.current?.click()}>
-                  <i className="fa-solid fa-cloud-arrow-up" /> 照片
-                </button>
-                <input ref={inputRef} type="file" accept="image/*" multiple style={{ display: 'none' }}
-                  onChange={e => handleFiles(e.target.files)} />
-              </div>
-
-              <div
-                id="dropzone"
-                className={`dropzone ${dragging ? 'dragover' : ''}`}
-                onDragEnter={e => { e.preventDefault(); setDragging(true) }}
-                onDragOver={e => { e.preventDefault(); setDragging(true) }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files) }}
-              >
-                <i className="fa-solid fa-images dropzone-icon" />
-                <p>拖放照片至此，或點擊上方按鈕上傳</p>
-              </div>
-
-              <div className="photo-grid" id="photo-grid">
-                {photos.length === 0 ? (
-                  <div className="empty-state" style={{ gridColumn: '1/-1', padding: '32px 16px' }}>
-                    <i className="fa-solid fa-camera" />
-                    <p>尚無照片，記錄此行程的精彩回憶吧！</p>
-                  </div>
-                ) : photos.map(photo => (
-                  <div key={photo.id} className="photo-card" onClick={() => onOpenLightbox(photo)}>
-                    <img src={photo.data} alt="Travel memory" />
-                    <div className="photo-overlay">
-                      <span className="photo-meta">{selectedActivity.title}</span>
-                    </div>
-                    <button className="btn-delete-photo"
-                      onClick={e => { e.stopPropagation(); if (confirm('確定要刪除這張照片嗎？')) onDeletePhoto(photo.id) }}>
-                      <i className="fa-solid fa-xmark" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {selectedActivity ? (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>已連結至此行程的精彩照片</span>
+                    <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                      onClick={() => inputRef.current?.click()}>
+                      <i className="fa-solid fa-cloud-arrow-up" /> 照片
                     </button>
+                    <input ref={inputRef} type="file" accept="image/*" multiple style={{ display: 'none' }}
+                      onChange={e => handleFiles(e.target.files)} />
                   </div>
-                ))}
-              </div>
+                  <div className={`dropzone ${dragging ? 'dragover' : ''}`}
+                    onDragEnter={e => { e.preventDefault(); setDragging(true) }}
+                    onDragOver={e => { e.preventDefault(); setDragging(true) }}
+                    onDragLeave={() => setDragging(false)}
+                    onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files) }}>
+                    <i className="fa-solid fa-images dropzone-icon" />
+                    <p>拖放照片至此，或點擊上方按鈕上傳</p>
+                  </div>
+                  <div className="photo-grid">
+                    {photos.length === 0 ? (
+                      <div className="empty-state" style={{ gridColumn: '1/-1', padding: '32px 16px' }}>
+                        <i className="fa-solid fa-camera" />
+                        <p>尚無照片，記錄此行程的精彩回憶吧！</p>
+                      </div>
+                    ) : photos.map(photo => (
+                      <div key={photo.id} className="photo-card" onClick={() => onOpenLightbox(photo)}>
+                        <img src={photo.data} alt="Travel memory" />
+                        <div className="photo-overlay">
+                          <span className="photo-meta">{selectedActivity.title}</span>
+                        </div>
+                        <button className="btn-delete-photo"
+                          onClick={e => { e.stopPropagation(); if (confirm('確定要刪除這張照片嗎？')) onDeletePhoto(photo.id) }}>
+                          <i className="fa-solid fa-xmark" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '12px 0' }}>
+                  <i className="fa-solid fa-arrow-left" style={{ marginRight: '6px' }} />
+                  點擊左側行程項目以上傳照片
+                </p>
+              )}
             </div>
           )}
         </div>
