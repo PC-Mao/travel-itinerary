@@ -26,10 +26,11 @@ export default function App() {
   } = useTrips(user?.uid)
 
   const {
-    trip: sharedTrip, loading: sharedLoading, error: sharedError,
+    trip: sharedTrip, loading: sharedLoading, error: sharedError, ownerUid: sharedOwnerUid,
     activeDayIndex: sharedDayIndex, setActiveDayIndex: setSharedDayIndex,
     activeCategoryFilter: sharedFilter, setFilter: setSharedFilter,
-    addActivity: sharedAddActivity, deleteActivity: sharedDeleteActivity, addDay: sharedAddDay,
+    addActivity: sharedAddActivity, updateActivity: sharedUpdateActivity,
+    deleteActivity: sharedDeleteActivity, addDay: sharedAddDay, updateDayMemo: sharedUpdateDayMemo,
   } = useSharedTrip(shareParam || null)
 
   const [showTripModal, setShowTripModal] = useState(false)
@@ -151,13 +152,16 @@ export default function App() {
       return (
         <SharedTripView
           trip={sharedTrip}
+          ownerUid={sharedOwnerUid}
           activeDayIndex={sharedDayIndex}
           setActiveDayIndex={setSharedDayIndex}
           activeCategoryFilter={sharedFilter}
           setFilter={setSharedFilter}
           addActivity={sharedAddActivity}
+          updateActivity={sharedUpdateActivity}
           deleteActivity={sharedDeleteActivity}
           addDay={sharedAddDay}
+          updateDayMemo={sharedUpdateDayMemo}
           user={user}
           onSignIn={signIn}
         />

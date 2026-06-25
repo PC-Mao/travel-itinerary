@@ -46,11 +46,25 @@ export function useSharedTrip(shareParam) {
     })
   }
 
+  async function updateActivity(actId, updates) {
+    if (!trip || !parsed) return
+    await updateDoc(doc(db, USERS_COL, parsed.ownerUid, 'trips', parsed.tripId), {
+      activities: (trip.activities ?? []).map(a => a.id === actId ? { ...a, ...updates } : a),
+    })
+  }
+
   async function deleteActivity(actId) {
     if (!trip || !parsed) return
     await updateDoc(doc(db, USERS_COL, parsed.ownerUid, 'trips', parsed.tripId), {
       activities: (trip.activities ?? []).filter(a => a.id !== actId),
     })
+  }
+
+  async function updateDayMemo(dayIndex, memo) {
+    if (!trip || !parsed) return
+    const dayMemos = [...(trip.dayMemos || [])]
+    dayMemos[dayIndex] = memo
+    await updateDoc(doc(db, USERS_COL, parsed.ownerUid, 'trips', parsed.tripId), { dayMemos })
   }
 
   async function addDay() {
@@ -65,8 +79,9 @@ export function useSharedTrip(shareParam) {
 
   return {
     trip, loading, error,
+    ownerUid: parsed?.ownerUid ?? null,
     activeDayIndex, setActiveDayIndex,
     activeCategoryFilter, setFilter: setActiveCategoryFilter,
-    addActivity, deleteActivity, addDay,
+    addActivity, updateActivity, deleteActivity, addDay, updateDayMemo,
   }
 }
