@@ -30,25 +30,25 @@ export default function SharedTripView({
     try { return JSON.parse(localStorage.getItem(expenseStoreKey) || '{}') } catch { return {} }
   })
 
-  function key(actId) { return `${ownerUid}_${actId}` }
+  function photoKey(actId) { return `${ownerUid}_${actId}` }
+  function dayKey(dayIdx) { return `${ownerUid}_${trip.id}_${dayIdx}` }
 
   function addPhoto(data) {
     if (!selectedActivity) return
-    const k = key(selectedActivity.id)
+    const k = photoKey(selectedActivity.id)
     const updated = { ...localPhotos, [k]: [...(localPhotos[k] || []), { id: 'p-' + Date.now(), data, label: selectedActivity.title }] }
     setLocalPhotos(updated)
     localStorage.setItem(photoStoreKey, JSON.stringify(updated))
   }
   function deletePhoto(photoId) {
     if (!selectedActivity) return
-    const k = key(selectedActivity.id)
+    const k = photoKey(selectedActivity.id)
     const updated = { ...localPhotos, [k]: (localPhotos[k] || []).filter(p => p.id !== photoId) }
     setLocalPhotos(updated)
     localStorage.setItem(photoStoreKey, JSON.stringify(updated))
   }
   function addExpense({ purpose, amount, payerId, sharedMemberIds }) {
-    if (!selectedActivity) return
-    const k = key(selectedActivity.id)
+    const k = dayKey(activeDayIndex)
     const now = new Date()
     const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
     const updated = { ...localExpenses, [k]: [...(localExpenses[k] || []), { id: 'ex-' + Date.now(), purpose, amount, payerId, sharedMemberIds, time: timeStr }] }
@@ -56,22 +56,15 @@ export default function SharedTripView({
     localStorage.setItem(expenseStoreKey, JSON.stringify(updated))
   }
   function deleteExpense(expId) {
-    if (!selectedActivity) return
-    const k = key(selectedActivity.id)
+    const k = dayKey(activeDayIndex)
     const updated = { ...localExpenses, [k]: (localExpenses[k] || []).filter(e => e.id !== expId) }
     setLocalExpenses(updated)
     localStorage.setItem(expenseStoreKey, JSON.stringify(updated))
   }
 
-  const currentPhotos = selectedActivity ? (localPhotos[key(selectedActivity.id)] || []) : []
-  const currentExpenses = selectedActivity ? (localExpenses[key(selectedActivity.id)] || []) : []
-
-  // expenses map keyed by activityId (for timeline expense badge)
-  const expensesByActId = Object.fromEntries(
-    Object.entries(localExpenses)
-      .filter(([k]) => k.startsWith(`${ownerUid}_`))
-      .map(([k, v]) => [k.replace(`${ownerUid}_`, ''), v])
-  )
+  const currentPhotos = selectedActivity ? (localPhotos[photoKey(selectedActivity.id)] || []) : []
+  // Day-level expenses
+  const currentExpenses = localExpenses[dayKey(activeDayIndex)] || []
 
   return (
     <div className="app-container" style={{ display: 'block' }}>
@@ -127,7 +120,6 @@ export default function SharedTripView({
             onDeleteActivity={id => { if (selectedActivity?.id === id) setSelectedActivity(null); deleteActivity(id) }}
             selectedActivityId={selectedActivity?.id}
             onSelectActivity={act => { setSelectedActivity(act); setMobileTab('details') }}
-            expenses={expensesByActId}
           />
           <DetailsPanel
             className={mobileTab !== 'details' ? 'panel-hidden-mobile' : ''}

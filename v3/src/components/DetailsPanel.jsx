@@ -145,7 +145,7 @@ export default function DetailsPanel({
             </h2>
             <div className="segmented-control">
               <button className={`tab-btn ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => setActiveTab('expenses')}>
-                <i className="fa-solid fa-wallet" /> 景點記帳
+                <i className="fa-solid fa-wallet" /> 日程記帳
               </button>
               <button className={`tab-btn ${activeTab === 'photos' ? 'active' : ''}`} onClick={() => setActiveTab('photos')}>
                 <i className="fa-solid fa-images" /> 照片記錄
@@ -153,85 +153,78 @@ export default function DetailsPanel({
             </div>
           </div>
 
-          {/* ── Tab: 景點記帳 ── */}
+          {/* ── Tab: 日程記帳（依日程，不需選景點） ── */}
           {activeTab === 'expenses' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-              {/* 總花費 */}
+              {/* 本日總花費 */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'hsla(180, 100%, 48%, 0.05)', padding: '8px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid hsla(180, 100%, 48%, 0.15)' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                  {selectedActivity ? '本項景點總花費' : '選取景點以記帳'}
+                  第 {activeDayIndex + 1} 天總花費
                 </span>
                 <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--accent-cyan)' }}>
                   ${total.toLocaleString()}
                 </span>
               </div>
 
-              {/* 新增消費表單（選了景點才啟用） */}
-              {selectedActivity ? (
-                <form onSubmit={handleExpSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <h4 style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <i className="fa-solid fa-plus-circle" style={{ color: 'var(--accent-cyan)' }} /> 新增消費紀錄
-                  </h4>
-                  <div className="form-row">
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label>付款人 {members.length > 0 && <span className="required">*</span>}</label>
-                      {members.length > 0 ? (
-                        <select value={expForm.payerId} required
-                          onChange={e => setExpForm(s => ({ ...s, payerId: e.target.value }))}
-                          style={{ padding: '8px 12px', fontSize: '0.9rem', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-                          <option value="" disabled>選擇付款人</option>
-                          {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                        </select>
-                      ) : (
-                        <input type="text" placeholder="先至成員分帳新增旅伴" disabled
-                          style={{ padding: '8px 12px', fontSize: '0.9rem', opacity: 0.5 }} />
-                      )}
-                    </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label>金額 ($) <span className="required">*</span></label>
-                      <input type="number" min="1" required placeholder="例如：200"
-                        style={{ padding: '8px 12px', fontSize: '0.9rem', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}
-                        value={expForm.amount} onChange={e => setExpForm(s => ({ ...s, amount: e.target.value }))} />
-                    </div>
+              {/* 新增消費表單（日程層級，永遠可用） */}
+              <form onSubmit={handleExpSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <h4 style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <i className="fa-solid fa-plus-circle" style={{ color: 'var(--accent-cyan)' }} /> 新增消費紀錄
+                </h4>
+                <div className="form-row">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label>付款人 {members.length > 0 && <span className="required">*</span>}</label>
+                    {members.length > 0 ? (
+                      <select value={expForm.payerId} required
+                        onChange={e => setExpForm(s => ({ ...s, payerId: e.target.value }))}
+                        style={{ padding: '8px 12px', fontSize: '0.9rem', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                        <option value="" disabled>選擇付款人</option>
+                        {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                      </select>
+                    ) : (
+                      <input type="text" placeholder="先至成員分帳新增旅伴" disabled
+                        style={{ padding: '8px 12px', fontSize: '0.9rem', opacity: 0.5 }} />
+                    )}
                   </div>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label>消費項目 / 用途</label>
-                    <input type="text" placeholder="例如：門票、餐費（選填）"
-                      style={{ padding: '8px 12px', fontSize: '0.9rem' }}
-                      value={expForm.purpose} onChange={e => setExpForm(s => ({ ...s, purpose: e.target.value }))} />
+                    <label>金額 ($) <span className="required">*</span></label>
+                    <input type="number" min="1" required placeholder="例如：200"
+                      style={{ padding: '8px 12px', fontSize: '0.9rem', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                      value={expForm.amount} onChange={e => setExpForm(s => ({ ...s, amount: e.target.value }))} />
                   </div>
-                  {members.length > 0 && (
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label>參與分攤人員 <span className="required">*</span></label>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
-                        {members.map(m => (
-                          <label key={m.id} className="checkbox-chip">
-                            <input type="checkbox"
-                              checked={expForm.sharedMemberIds.includes(m.id)}
-                              onChange={() => toggleSplitMember(m.id)} />
-                            {m.name}
-                          </label>
-                        ))}
-                      </div>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label>消費項目 / 用途</label>
+                  <input type="text" placeholder="例如：門票、餐費（選填）"
+                    style={{ padding: '8px 12px', fontSize: '0.9rem' }}
+                    value={expForm.purpose} onChange={e => setExpForm(s => ({ ...s, purpose: e.target.value }))} />
+                </div>
+                {members.length > 0 && (
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label>參與分攤人員 <span className="required">*</span></label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+                      {members.map(m => (
+                        <label key={m.id} className="checkbox-chip">
+                          <input type="checkbox"
+                            checked={expForm.sharedMemberIds.includes(m.id)}
+                            onChange={() => toggleSplitMember(m.id)} />
+                          {m.name}
+                        </label>
+                      ))}
                     </div>
-                  )}
-                  <button type="submit" className="btn btn-primary"
-                    style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: '0.9rem' }}>
-                    <i className="fa-solid fa-check" /> 加入帳目
-                  </button>
-                </form>
-              ) : (
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '12px 0' }}>
-                  <i className="fa-solid fa-arrow-left" style={{ marginRight: '6px' }} />
-                  點擊左側行程項目以開始記帳
-                </p>
-              )}
+                  </div>
+                )}
+                <button type="submit" className="btn btn-primary"
+                  style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: '0.9rem' }}>
+                  <i className="fa-solid fa-check" /> 加入帳目
+                </button>
+              </form>
 
               {/* 費用紀錄列表（在「加入帳目」下方） */}
-              {expenses.length > 0 && (
+              {expenses.length > 0 ? (
                 <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>消費紀錄</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>今日消費紀錄</span>
                   <div style={{ maxHeight: '240px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', padding: '2px' }}>
                     {expenses.map(ex => (
                       <div key={ex.id} className="expense-item">
@@ -252,6 +245,10 @@ export default function DetailsPanel({
                     ))}
                   </div>
                 </div>
+              ) : (
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '8px 0' }}>
+                  尚無今日消費紀錄
+                </p>
               )}
             </div>
           )}

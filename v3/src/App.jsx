@@ -76,28 +76,29 @@ export default function App() {
 
   const currentPhotos = selectedActivity ? (localPhotos[photoKey(selectedActivity.id)] || []) : []
 
-  // Expenses (localStorage, keyed by uid_activityId)
+  // Expenses (localStorage, keyed by uid_tripId_dayIndex — day-level like memo)
   const [localExpenses, setLocalExpenses] = useState(() => {
     try { return JSON.parse(localStorage.getItem('sv_v3_expenses') || '{}') } catch { return {} }
   })
-  function expKey(actId) { return `${user?.uid}_${actId}` }
-  function addExpense({ purpose, amount }) {
-    if (!selectedActivity) return
-    const key = expKey(selectedActivity.id)
+  function expKey(tripId, dayIdx) { return `${user?.uid}_${tripId}_${dayIdx}` }
+  function addExpense({ purpose, amount, payerId, sharedMemberIds }) {
+    if (!activeTrip) return
+    const key = expKey(activeTrip.id, activeDayIndex)
     const now = new Date()
     const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-    const updated = { ...localExpenses, [key]: [...(localExpenses[key] || []), { id: 'ex-' + Date.now(), purpose, amount, time: timeStr }] }
+    const updated = { ...localExpenses, [key]: [...(localExpenses[key] || []), { id: 'ex-' + Date.now(), purpose, amount, payerId, sharedMemberIds, time: timeStr }] }
     setLocalExpenses(updated)
     localStorage.setItem('sv_v3_expenses', JSON.stringify(updated))
   }
   function deleteExpense(expId) {
-    if (!selectedActivity) return
-    const key = expKey(selectedActivity.id)
+    if (!activeTrip) return
+    const key = expKey(activeTrip.id, activeDayIndex)
     const updated = { ...localExpenses, [key]: (localExpenses[key] || []).filter(e => e.id !== expId) }
     setLocalExpenses(updated)
     localStorage.setItem('sv_v3_expenses', JSON.stringify(updated))
   }
-  const currentExpenses = selectedActivity ? (localExpenses[expKey(selectedActivity.id)] || []) : []
+  // Day-level expenses (not activity-level)
+  const currentExpenses = activeTrip ? (localExpenses[expKey(activeTrip.id, activeDayIndex)] || []) : []
 
   function handleSetActiveTripId(id) { setSelectedActivity(null); setActiveTripId(id) }
   function handleSetActiveDayIndex(i) { setSelectedActivity(null); setActiveDayIndex(i) }
@@ -320,11 +321,7 @@ export default function App() {
             onDeleteActivity={id => { if (selectedActivity?.id === id) setSelectedActivity(null); deleteActivity(id) }}
             selectedActivityId={selectedActivity?.id}
             onSelectActivity={act => { setSelectedActivity(act); setMobileTab('details') }}
-            expenses={Object.fromEntries(
-              Object.entries(localExpenses)
-                .filter(([key]) => key.startsWith(`${user?.uid}_`))
-                .map(([key, val]) => [key.replace(`${user?.uid}_`, ''), val])
-            )}
+            expenses={{}}
           />
           <DetailsPanel
             className={mobileTab !== 'details' ? 'panel-hidden-mobile' : ''}
@@ -397,10 +394,10 @@ export default function App() {
           onDeleteMember={id => deleteMember(activeTrip.id, id)}
           onClose={() => setShowMembersModal(false)}
           allExpenses={
-            (activeTrip.activities || []).flatMap(act => {
-              const key = expKey(act.id)
+            Array.from({ length: activeTrip.daysCount }, (_, i) => {
+              const key = expKey(activeTrip.id, i)
               return (localExpenses[key] || [])
-            })
+            }).flat()
           }
         />
       )}

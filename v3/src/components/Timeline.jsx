@@ -8,7 +8,7 @@ const FILTERS = [
   { key: 'other', label: '其他', icon: 'fa-ellipsis' },
 ]
 
-export default function Timeline({ className = '', activeTrip, activeDayIndex, activeFilter, onFilter, onAddActivity, onEditActivity, onDeleteActivity, selectedActivityId, onSelectActivity, expenses }) {
+export default function Timeline({ className = '', activeTrip, activeDayIndex, activeFilter, onFilter, onAddActivity, onEditActivity, onDeleteActivity, selectedActivityId, onSelectActivity }) {
   const hasTrip = !!activeTrip
 
   let activities = hasTrip
@@ -59,8 +59,6 @@ export default function Timeline({ className = '', activeTrip, activeDayIndex, a
                 此日尚無排定該類型的行程，點擊右上角「新增行程」規劃日程吧！
               </div>
             ) : activities.map(act => {
-              const actExpenses = expenses?.[act.id] || []
-              const expTotal = actExpenses.reduce((s, e) => s + e.amount, 0)
               const isSelected = act.id === selectedActivityId
 
               return (
@@ -89,11 +87,6 @@ export default function Timeline({ className = '', activeTrip, activeDayIndex, a
                       </div>
                     )}
                     {act.desc && <p className="timeline-desc">{act.desc}</p>}
-                    {expTotal > 0 && (
-                      <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, marginTop: '6px' }}>
-                        <i className="fa-solid fa-wallet" /> 支出: ${expTotal.toLocaleString()}
-                      </span>
-                    )}
                   </div>
 
                   {/* Action buttons: completely independent, no parent click interference */}
