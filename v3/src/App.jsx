@@ -14,7 +14,7 @@ import Lightbox from './components/modals/Lightbox'
 const shareParam = new URLSearchParams(window.location.search).get('share')
 
 export default function App() {
-  const { user, loading: authLoading, signIn, logOut } = useAuth()
+  const { user, loading: authLoading, error: authError, signIn, logOut } = useAuth()
   const {
     trips, activeTrip, activeDayIndex, activeCategoryFilter, loading: tripsLoading,
     setActiveTripId, setActiveDayIndex, setFilter,
@@ -186,6 +186,11 @@ export default function App() {
           <button onClick={signIn} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', gap: '12px', padding: '14px' }}>
             <i className="fa-brands fa-google" /> 以 Google 帳號登入
           </button>
+          {authError && (
+            <p style={{ marginTop: '12px', fontSize: '0.85rem', color: 'var(--danger)', lineHeight: 1.5 }}>
+              ⚠️ {authError}
+            </p>
+          )}
         </div>
       </div>
     )
